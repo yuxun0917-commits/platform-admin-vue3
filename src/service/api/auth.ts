@@ -17,25 +17,24 @@ export function fetchCaptcha() {
  *
  * @param userName User name
  * @param password Password
- * @param captchaKey Captcha key returned by `/captcha/get`
- * @param captchaCode Captcha code input by user
+ * @param captcha Captcha key returned by `/captcha/get` and the code input by user
  */
-export function fetchLogin(userName: string, password: string, captchaKey: string, captchaCode: string) {
+export function fetchLogin(userName: string, password: string, captcha: { captchaKey: string; captchaCode: string }) {
   return request<Api.Auth.LoginToken>({
     url: '/auth/login',
     method: 'post',
     data: {
       username: userName,
       password,
-      captchaKey,
-      captchaCode
+      captchaKey: captcha.captchaKey,
+      captchaCode: captcha.captchaCode
     }
   });
 }
 
 /** Get user info */
 export function fetchGetUserInfo() {
-  return request<Api.Auth.UserInfo>({ url: '/auth/getUserInfo' });
+  return request<Api.Auth.UserInfo>({ url: '/user/info' });
 }
 
 /**

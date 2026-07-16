@@ -404,6 +404,8 @@ declare namespace App {
             codePlaceholder: string;
             passwordPlaceholder: string;
             confirmPasswordPlaceholder: string;
+            captchaPlaceholder: string;
+            refreshCaptcha: string;
             codeLogin: string;
             confirm: string;
             back: string;
@@ -562,9 +564,12 @@ declare namespace App {
               userEmail: string;
               userStatus: string;
               userRole: string;
+              password: string;
             };
             addUser: string;
             editUser: string;
+            password: string;
+            resetPwd: string;
             gender: {
               male: string;
               female: string;

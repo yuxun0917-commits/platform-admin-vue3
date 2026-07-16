@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { $t } from '@/locales';
 import { useAuthStore } from '@/store/modules/auth';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'HeaderBanner'
@@ -44,7 +44,7 @@ const statisticData = computed<StatisticData[]>(() => [
           </div>
           <div class="pl-12px">
             <h3 class="text-18px font-semibold">
-              {{ $t('page.home.greeting', { userName: authStore.userInfo.userName }) }}
+              {{ $t('page.home.greeting', { userName: authStore.userInfo.user.username }) }}
             </h3>
             <p class="text-#999 leading-30px">{{ $t('page.home.weatherDesc') }}</p>
           </div>

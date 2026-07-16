@@ -157,6 +157,7 @@ const local: App.I18n.Schema = {
     404: '页面不存在',
     500: '服务器错误',
     'iframe-page': '外链页面',
+    'coming-soon': '页面建设中',
     home: '首页',
     document: '文档',
     document_project: '项目文档',
@@ -166,33 +167,25 @@ const local: App.I18n.Schema = {
     document_unocss: 'UnoCSS文档',
     document_naive: 'Naive UI文档',
     document_antd: 'Ant Design Vue文档',
-    'user-center': '个人中心',
-    about: '关于',
-    function: '系统功能',
-    function_tab: '标签页',
-    'function_multi-tab': '多标签页',
-    'function_hide-child': '隐藏子菜单',
-    'function_hide-child_one': '隐藏子菜单',
-    'function_hide-child_two': '菜单二',
-    'function_hide-child_three': '菜单三',
-    function_request: '请求',
-    'function_toggle-auth': '切换权限',
-    'function_super-page': '超级管理员可见',
-    manage: '系统管理',
-    manage_user: '用户管理',
-    'manage_user-detail': '用户详情',
-    manage_role: '角色管理',
-    manage_menu: '菜单管理',
-    'multi-menu': '多级菜单',
-    'multi-menu_first': '菜单一',
-    'multi-menu_first_child': '菜单一子菜单',
-    'multi-menu_second': '菜单二',
-    'multi-menu_second_child': '菜单二子菜单',
-    'multi-menu_second_child_home': '菜单二子菜单首页',
     exception: '异常页',
     exception_403: '403',
     exception_404: '404',
-    exception_500: '500'
+    exception_500: '500',
+    system: '系统管理',
+    system_user: '用户管理',
+    system_role: '角色管理',
+    system_menu: '菜单管理',
+    system_dept: '部门管理',
+    system_post: '岗位管理',
+    system_dict: '字典管理',
+    system_config: '参数管理',
+    system_notice: '通知公告',
+    log: '日志管理',
+    log_operlog: '操作日志',
+    log_loginlog: '登录日志',
+    monitor: '系统监控',
+    monitor_job: '定时任务',
+    monitor_server: '服务监控'
   },
   page: {
     login: {
@@ -362,10 +355,13 @@ const local: App.I18n.Schema = {
           userPhone: '请输入手机号',
           userEmail: '请输入邮箱',
           userStatus: '请选择用户状态',
-          userRole: '请选择用户角色'
+          userRole: '请选择用户角色',
+          password: '请输入密码'
         },
         addUser: '新增用户',
         editUser: '编辑用户',
+        password: '密码',
+        resetPwd: '重置密码',
         gender: {
           male: '男',
           female: '女'
@@ -453,7 +449,7 @@ const local: App.I18n.Schema = {
     },
     pwd: {
       required: '请输入密码',
-      invalid: '密码格式不正确，6-18位字符，包含字母、数字、下划线'
+      invalid: '密码格式不正确，6-18位字符，包含字母、数字、下划线，且必须含 ! 号'
     },
     confirmPwd: {
       required: '请输入确认密码',

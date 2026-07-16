@@ -2,10 +2,10 @@ import { computed, reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { defineStore } from 'pinia';
 import { useLoading } from '@sa/hooks';
-import { SetupStoreId } from '@/enum';
-import { useRouterPush } from '@/hooks/common/router';
 import { fetchCaptcha, fetchGetUserInfo, fetchLogin } from '@/service/api';
+import { useRouterPush } from '@/hooks/common/router';
 import { localStg } from '@/utils/storage';
+import { SetupStoreId } from '@/enum';
 import { $t } from '@/locales';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
@@ -35,17 +35,24 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   }
 
   const userInfo: Api.Auth.UserInfo = reactive({
-    userId: '',
-    userName: '',
+    user: {
+      id: 0,
+      username: '',
+      nickname: '',
+      status: 1
+    },
     roles: [],
-    buttons: []
+    permissions: [],
+    menus: []
   });
 
   /** is super role in static route */
   const isStaticSuper = computed(() => {
     const { VITE_AUTH_ROUTE_MODE, VITE_STATIC_SUPER_ROLE } = import.meta.env;
 
-    return VITE_AUTH_ROUTE_MODE === 'static' && userInfo.roles.includes(VITE_STATIC_SUPER_ROLE);
+    return (
+      VITE_AUTH_ROUTE_MODE === 'static' && userInfo.roles.map(role => role.roleCode).includes(VITE_STATIC_SUPER_ROLE)
+    );
   });
 
   /** Is login */
@@ -72,20 +79,23 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
    *
    * @param userName User name
    * @param password Password
-   * @param captchaKey Captcha key returned by `/captcha/get`
-   * @param captchaCode Captcha code input by user
-   * @param [redirect=true] Whether to redirect after login. Default is `true`
+   * @param options.redirect Whether to redirect after login. Default is `true`
+   * @param options.captchaKey Captcha key returned by `/captcha/get`
+   * @param options.captchaCode Captcha code input by user
    */
   async function login(
     userName: string,
     password: string,
-    captchaKey?: string,
-    captchaCode?: string,
-    redirect = true
+    options?: { redirect?: boolean; captchaKey?: string; captchaCode?: string }
   ) {
     startLoading();
 
-    const { data: loginToken, error } = await fetchLogin(userName, password, captchaKey, captchaCode);
+    const { redirect = true, captchaKey: captchaKeyValue = '', captchaCode = '' } = options ?? {};
+
+    const { data: loginToken, error } = await fetchLogin(userName, password, {
+      captchaKey: captchaKeyValue,
+      captchaCode
+    });
 
     if (!error) {
       const pass = await loginByToken(loginToken);
@@ -95,7 +105,7 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
 
         window.$notification?.success({
           message: $t('page.login.common.loginSuccess'),
-          description: $t('page.login.common.welcomeBack', { userName: userInfo.userName })
+          description: $t('page.login.common.welcomeBack', { userName: userInfo.user.username })
         });
       }
     } else {
@@ -113,7 +123,7 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     const pass = await getUserInfo();
 
     if (pass) {
-      token.value = loginToken.token;
+      token.value = loginToken;
 
       return true;
     }

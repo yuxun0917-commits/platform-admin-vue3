@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue';
-import { $t } from '@/locales';
 import { loginModuleRecord } from '@/constants/app';
+import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
 import { useAntdForm, useFormRules } from '@/hooks/common/form';
-import { useAuthStore } from '@/store/modules/auth';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'PwdLogin'
@@ -21,8 +21,8 @@ interface FormModel {
 }
 
 const model: FormModel = reactive({
-  userName: 'Soybean',
-  password: '123456',
+  userName: 'admin',
+  password: 'Yx20011102!',
   captchaCode: ''
 });
 
@@ -33,9 +33,7 @@ const rules = computed<Record<keyof FormModel, App.Global.FormRule[]>>(() => {
   return {
     userName: formRules.userName,
     password: formRules.pwd,
-    captchaCode: [
-      { required: true, message: $t('page.login.common.captchaPlaceholder') }
-    ]
+    captchaCode: [{ required: true, message: $t('page.login.common.captchaPlaceholder') }]
   };
 });
 
@@ -48,7 +46,10 @@ onMounted(refreshCaptcha);
 
 async function handleSubmit() {
   await validate();
-  await authStore.login(model.userName, model.password, authStore.captchaKey, model.captchaCode);
+  await authStore.login(model.userName, model.password, {
+    captchaKey: authStore.captchaKey,
+    captchaCode: model.captchaCode
+  });
 }
 </script>
 
@@ -65,7 +66,7 @@ async function handleSubmit() {
       />
     </AFormItem>
     <AFormItem name="captchaCode">
-      <div class="flex-y-center w-full gap-12px">
+      <div class="w-full flex-y-center gap-12px">
         <AInput
           v-model:value="model.captchaCode"
           size="large"
@@ -76,7 +77,7 @@ async function handleSubmit() {
           v-if="authStore.captchaImage"
           :src="authStore.captchaImage"
           alt="captcha"
-          class="h-40px w-120px cursor-pointer rounded-4px border border-border"
+          class="border-border h-40px w-120px cursor-pointer border rounded-4px"
           :title="$t('page.login.common.refreshCaptcha')"
           @click="refreshCaptcha"
         />

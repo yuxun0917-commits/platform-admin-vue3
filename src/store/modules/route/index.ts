@@ -3,12 +3,12 @@ import type { RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import { useBoolean } from '@sa/hooks';
 import type { CustomRoute, ElegantConstRoute, LastLevelRouteKey, RouteKey, RouteMap } from '@elegant-router/types';
-import { SetupStoreId } from '@/enum';
 import { router } from '@/router';
+import { fetchGetConstantRoutes, fetchGetUserRoutes, fetchIsRouteExist } from '@/service/api';
+import { SetupStoreId } from '@/enum';
 import { createStaticRoutes, getAuthVueRoutes } from '@/router/routes';
 import { ROOT_ROUTE } from '@/router/routes/builtin';
 import { getRouteName, getRoutePath } from '@/router/elegant/transform';
-import { fetchGetConstantRoutes, fetchGetUserRoutes, fetchIsRouteExist } from '@/service/api';
 import { useAuthStore } from '../auth';
 import { useTabStore } from '../tab';
 import {
@@ -22,6 +22,7 @@ import {
   transformMenuToSearchMenus,
   updateLocaleOfGlobalMenus
 } from './shared';
+import { sortMenuTree, transformMenusToGlobalMenus, transformMenusToRoutes } from './backend-menu';
 
 export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   const authStore = useAuthStore();
@@ -177,7 +178,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   /** Init auth route */
   async function initAuthRoute() {
     // check if user info is initialized
-    if (!authStore.userInfo.userId) {
+    if (!authStore.userInfo.user?.id) {
       await authStore.initUserInfo();
     }
 
@@ -187,7 +188,33 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
       await initDynamicAuthRoute();
     }
 
+    initBackendMenu();
+
     tabStore.initHomeTab();
+  }
+
+  /**
+   * Build routes and sidebar menus from the backend menu tree returned by `GET /user/info`.
+   *
+   * Called after static/dynamic auth routes are ready. Backend routes are registered
+   * (vue-router replaces same-name routes) and the global sidebar menus are overridden
+   * with the backend menu tree.
+   */
+  function initBackendMenu() {
+    const menusData = authStore.userInfo.menus;
+
+    if (!menusData || menusData.length === 0) return;
+
+    // Sort by displayOrder (recursively) so the sidebar follows the backend-defined order,
+    // mirroring how static/dynamic routes are sorted by meta.order.
+    const sortedMenus = sortMenuTree(menusData);
+
+    transformMenusToRoutes(sortedMenus).forEach(route => {
+      const removeFn = router.addRoute(route);
+      addRemoveRouteFn(removeFn);
+    });
+
+    menus.value = transformMenusToGlobalMenus(sortedMenus);
   }
 
   /** Init static auth route */
@@ -197,7 +224,10 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     if (authStore.isStaticSuper) {
       addAuthRoutes(staticAuthRoutes);
     } else {
-      const filteredAuthRoutes = filterAuthRoutesByRoles(staticAuthRoutes, authStore.userInfo.roles);
+      const filteredAuthRoutes = filterAuthRoutesByRoles(
+        staticAuthRoutes,
+        authStore.userInfo.roles.map(role => role.roleCode)
+      );
 
       addAuthRoutes(filteredAuthRoutes);
     }
@@ -318,7 +348,9 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   }
 
   async function onRouteSwitchWhenLoggedIn() {
-    await authStore.initUserInfo();
+    // 菜单为后端驱动，userInfo（含 menus/roles/permissions）已在 initAuthRoute 时
+    // 通过 /user/info 拉取一次，无需每次路由切换都重新请求。
+    // 若确需刷新（如改密码、变更角色后），请显式调用 authStore.initUserInfo()。
   }
 
   async function onRouteSwitchWhenNotLoggedIn() {
@@ -338,6 +370,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
     initConstantRoute,
     isInitConstantRoute,
     initAuthRoute,
+    initBackendMenu,
     isInitAuthRoute,
     setIsInitAuthRoute,
     getIsAuthRouteExist,

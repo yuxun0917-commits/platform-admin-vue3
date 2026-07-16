@@ -9,7 +9,7 @@ defineOptions({
 });
 
 const authStore = useAuthStore();
-const { routerPushByKey, toLogin } = useRouterPush();
+const { toLogin } = useRouterPush();
 
 function loginOrRegister() {
   toLogin();
@@ -33,17 +33,10 @@ function logout() {
   <ADropdown v-else placement="bottomRight" trigger="click">
     <ButtonIcon>
       <SvgIcon icon="ph:user-circle" class="text-icon-large" />
-      <span class="text-16px font-medium">{{ authStore.userInfo.userName }}</span>
+      <span class="text-16px font-medium">{{ authStore.userInfo.user.username }}</span>
     </ButtonIcon>
     <template #overlay>
       <AMenu>
-        <AMenuItem @click="routerPushByKey('user-center')">
-          <div class="flex-center gap-8px">
-            <SvgIcon icon="ph:user-circle" class="text-icon" />
-            {{ $t('common.userCenter') }}
-          </div>
-        </AMenuItem>
-        <AMenuDivider />
         <AMenuItem @click="logout">
           <div class="flex-center gap-8px">
             <SvgIcon icon="ph:sign-out" class="text-icon" />

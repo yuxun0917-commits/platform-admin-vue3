@@ -157,6 +157,7 @@ const local: App.I18n.Schema = {
     404: 'Page Not Found',
     500: 'Server Error',
     'iframe-page': 'Iframe',
+    'coming-soon': 'Coming Soon',
     home: 'Home',
     document: 'Document',
     document_project: 'Project Document',
@@ -166,33 +167,25 @@ const local: App.I18n.Schema = {
     document_unocss: 'UnoCSS Document',
     document_naive: 'Naive UI Document',
     document_antd: 'Ant Design Vue Document',
-    'user-center': 'User Center',
-    about: 'About',
-    function: 'System Function',
-    function_tab: 'Tab',
-    'function_multi-tab': 'Multi Tab',
-    'function_hide-child': 'Hide Child',
-    'function_hide-child_one': 'Hide Child',
-    'function_hide-child_two': 'Two',
-    'function_hide-child_three': 'Three',
-    function_request: 'Request',
-    'function_toggle-auth': 'Toggle Auth',
-    'function_super-page': 'Super Admin Visible',
-    manage: 'System Manage',
-    manage_user: 'User Manage',
-    'manage_user-detail': 'User Detail',
-    manage_role: 'Role Manage',
-    manage_menu: 'Menu Manage',
-    'multi-menu': 'Multi Menu',
-    'multi-menu_first': 'Menu One',
-    'multi-menu_first_child': 'Menu One Child',
-    'multi-menu_second': 'Menu Two',
-    'multi-menu_second_child': 'Menu Two Child',
-    'multi-menu_second_child_home': 'Menu Two Child Home',
     exception: 'Exception',
     exception_403: '403',
     exception_404: '404',
-    exception_500: '500'
+    exception_500: '500',
+    system: 'System',
+    system_user: 'User Management',
+    system_role: 'Role Management',
+    system_menu: 'Menu Management',
+    system_dept: 'Department Management',
+    system_post: 'Post Management',
+    system_dict: 'Dictionary Management',
+    system_config: 'Config Management',
+    system_notice: 'Notice Management',
+    log: 'Log Management',
+    log_operlog: 'Operate Log',
+    log_loginlog: 'Login Log',
+    monitor: 'Monitor',
+    monitor_job: 'Scheduled Job',
+    monitor_server: 'Server Monitor'
   },
   page: {
     login: {
@@ -362,10 +355,13 @@ const local: App.I18n.Schema = {
           userPhone: 'Please enter phone number',
           userEmail: 'Please enter email',
           userStatus: 'Please select user status',
-          userRole: 'Please select user role'
+          userRole: 'Please select user role',
+          password: 'Please enter password'
         },
         addUser: 'Add User',
         editUser: 'Edit User',
+        password: 'Password',
+        resetPwd: 'Reset Password',
         gender: {
           male: 'Male',
           female: 'Female'
@@ -453,7 +449,7 @@ const local: App.I18n.Schema = {
     },
     pwd: {
       required: 'Please enter password',
-      invalid: '6-18 characters, including letters, numbers, and underscores'
+      invalid: '6-18 characters, including letters, numbers, underscores, and must contain "!"'
     },
     confirmPwd: {
       required: 'Please enter password again',
