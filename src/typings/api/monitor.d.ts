@@ -2,8 +2,16 @@ declare namespace Api {
   namespace Monitor {
     /** CPU 信息 */
     interface CpuInfo {
-      /** CPU 核心数 */
+      /** CPU 核心数（逻辑） */
       cpuNum: number;
+      /** CPU 型号 */
+      cpuName: string;
+      /** 物理核心数 */
+      physicalNum: number;
+      /** CPU 插槽数 */
+      packageNum: number;
+      /** 每核心使用率 (%) */
+      perCore: number[];
       /** 系统使用率 (%) */
       sys: number;
       /** 用户使用率 (%) */
@@ -60,6 +68,14 @@ declare namespace Api {
       osArch: string;
       /** 操作系统版本 */
       osVersion: string;
+      /** 系统已运行时长 */
+      systemUptime: string;
+      /** 系统启动时间（时间戳） */
+      bootTime?: number;
+      /** 硬件型号 */
+      computerModel: string;
+      /** 系统进程总数 */
+      processCount: number;
     }
 
     /** 磁盘分区信息 */

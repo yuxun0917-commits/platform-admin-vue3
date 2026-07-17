@@ -20,7 +20,7 @@ function usageColor(v: number) {
 }
 
 /** 时间戳格式化 */
-function formatTime(ts: number) {
+function formatTime(ts: number | undefined) {
   if (!ts) return '-';
   const d = new Date(ts);
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -69,7 +69,11 @@ onUnmounted(() => {
             <ADescriptionsItem label="IP 地址">{{ data.sys.computerIp }}</ADescriptionsItem>
             <ADescriptionsItem label="操作系统">{{ data.sys.osName }} {{ data.sys.osVersion }}</ADescriptionsItem>
             <ADescriptionsItem label="系统架构">{{ data.sys.osArch }}</ADescriptionsItem>
+            <ADescriptionsItem label="硬件型号">{{ data.sys.computerModel }}</ADescriptionsItem>
             <ADescriptionsItem label="用户目录">{{ data.sys.userDir }}</ADescriptionsItem>
+            <ADescriptionsItem label="系统启动时间">{{ formatTime(data.sys.bootTime) }}</ADescriptionsItem>
+            <ADescriptionsItem label="已运行时长">{{ data.sys.systemUptime }}</ADescriptionsItem>
+            <ADescriptionsItem label="进程总数">{{ data.sys.processCount }}</ADescriptionsItem>
           </ADescriptions>
         </ACard>
 
@@ -91,7 +95,9 @@ onUnmounted(() => {
         <!-- CPU 信息 -->
         <ACard title="CPU 信息" :bordered="false" class="h-full">
           <ADescriptions :column="1" size="small" class="info-desc">
+            <ADescriptionsItem label="CPU 型号">{{ data.cpu.cpuName }}</ADescriptionsItem>
             <ADescriptionsItem label="CPU 核心数">{{ data.cpu.cpuNum }}</ADescriptionsItem>
+            <ADescriptionsItem label="系统使用率">{{ data.cpu.sys }}%</ADescriptionsItem>
           </ADescriptions>
           <div class="mt-12px flex items-center gap-12px">
             <span class="w-72px shrink-0 text-13px text-gray-500">使用率</span>
@@ -115,10 +121,7 @@ onUnmounted(() => {
         <!-- JVM 信息 -->
         <ACard title="JVM 信息" :bordered="false" class="h-full">
           <ADescriptions :column="1" size="small" class="info-desc">
-            <ADescriptionsItem label="总内存">{{ toGB(data.jvm.total) }}</ADescriptionsItem>
-            <ADescriptionsItem label="已用内存">{{ toGB(data.jvm.used) }}</ADescriptionsItem>
             <ADescriptionsItem label="最大可用">{{ toGB(data.jvm.max) }}</ADescriptionsItem>
-            <ADescriptionsItem label="剩余内存">{{ toGB(data.jvm.free) }}</ADescriptionsItem>
             <ADescriptionsItem label="JDK 版本">{{ data.jvm.version }}</ADescriptionsItem>
             <ADescriptionsItem label="启动时间">{{ formatTime(data.jvm.startTime) }}</ADescriptionsItem>
             <ADescriptionsItem label="运行时长">{{ data.jvm.runTime }}</ADescriptionsItem>
@@ -133,12 +136,7 @@ onUnmounted(() => {
         <ACard title="消息队列信息" :bordered="false" class="h-full">
           <ADescriptions :column="1" size="small" class="info-desc">
             <ADescriptionsItem label="名称">{{ data.mq.name }}</ADescriptionsItem>
-            <ADescriptionsItem label="版本">{{ data.mq.version }}</ADescriptionsItem>
             <ADescriptionsItem label="主机">{{ data.mq.host }}:{{ data.mq.port }}</ADescriptionsItem>
-            <ADescriptionsItem label="集群名称">{{ data.mq.clusterName }}</ADescriptionsItem>
-            <ADescriptionsItem label="状态">
-              <ATag :color="data.mq.status === '在线' ? 'success' : 'error'">{{ data.mq.status }}</ATag>
-            </ADescriptionsItem>
             <ADescriptionsItem label="队列数">{{ data.mq.queueCount }}</ADescriptionsItem>
             <ADescriptionsItem label="消息数">{{ data.mq.messageCount }}</ADescriptionsItem>
             <ADescriptionsItem label="消费者数">{{ data.mq.consumerCount }}</ADescriptionsItem>
