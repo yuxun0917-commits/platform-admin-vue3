@@ -107,6 +107,12 @@ function handleDelete(row: Api.Dict.DictVO) {
 
 const columns = [
   {
+    title: '序号',
+    key: 'index',
+    align: 'center' as const,
+    width: 70
+  },
+  {
     title: '字典名称',
     dataIndex: 'dictName',
     key: 'dictName',
@@ -193,10 +199,13 @@ onMounted(() => {
         :pagination="pagination"
         row-key="id"
         size="small"
-        :scroll="{ x: 990 }"
+        :scroll="{ x: 1060 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
           <template v-if="column.key === 'status'">
             <ATag :color="(record as Api.Dict.DictVO).status === 1 ? 'success' : 'default'">
               {{ (record as Api.Dict.DictVO).status === 1 ? '正常' : '禁用' }}

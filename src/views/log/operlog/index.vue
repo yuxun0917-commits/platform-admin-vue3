@@ -118,8 +118,7 @@ function methodColor(method: string) {
 
 const columns = [
   {
-    title: '日志编号',
-    dataIndex: 'id',
+    title: '序号',
     key: 'id',
     align: 'center' as const,
     width: 90
@@ -237,8 +236,11 @@ onMounted(async () => {
         :scroll="{ x: 1100 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'requestMethod'">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'id'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
+          <template v-else-if="column.key === 'requestMethod'">
             <ATag :color="methodColor((record as Api.SysLog.SysLogVO).requestMethod)">
               {{ (record as Api.SysLog.SysLogVO).requestMethod }}
             </ATag>

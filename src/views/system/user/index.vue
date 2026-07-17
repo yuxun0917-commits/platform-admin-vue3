@@ -131,6 +131,12 @@ function handleChangePassword(row: Api.User.UserVO) {
 
 const columns = [
   {
+    title: '序号',
+    key: 'index',
+    align: 'center' as const,
+    width: 70
+  },
+  {
     title: '用户名',
     dataIndex: 'username',
     key: 'username',
@@ -242,9 +248,13 @@ onMounted(() => {
         :pagination="pagination"
         row-key="id"
         size="small"
+        :scroll="{ x: 1250 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
           <template v-if="column.key === 'gender'">
             {{ genderMap[record.gender ?? 0] }}
           </template>

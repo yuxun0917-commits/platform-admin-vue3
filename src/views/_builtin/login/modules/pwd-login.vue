@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue';
-import { loginModuleRecord } from '@/constants/app';
 import { useAuthStore } from '@/store/modules/auth';
-import { useRouterPush } from '@/hooks/common/router';
 import { useAntdForm, useFormRules } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
@@ -11,7 +9,6 @@ defineOptions({
 });
 
 const authStore = useAuthStore();
-const { toggleLoginModule } = useRouterPush();
 const { formRef, validate } = useAntdForm();
 
 interface FormModel {
@@ -87,24 +84,10 @@ async function handleSubmit() {
       </div>
     </AFormItem>
     <ASpace direction="vertical" size="large" class="w-full">
-      <div class="flex-y-center justify-between">
-        <ACheckbox>{{ $t('page.login.pwdLogin.rememberMe') }}</ACheckbox>
-        <AButton type="text" @click="toggleLoginModule('reset-pwd')">
-          {{ $t('page.login.pwdLogin.forgetPassword') }}
-        </AButton>
-      </div>
+      <ACheckbox>{{ $t('page.login.pwdLogin.rememberMe') }}</ACheckbox>
       <AButton type="primary" block size="large" shape="round" :loading="authStore.loginLoading" @click="handleSubmit">
         {{ $t('common.confirm') }}
       </AButton>
-      <div class="flex-y-center justify-between">
-        <AButton class="h-34px flex-1" block @click="toggleLoginModule('code-login')">
-          {{ $t(loginModuleRecord['code-login']) }}
-        </AButton>
-        <div class="w-12px"></div>
-        <AButton class="h-34px flex-1" block @click="toggleLoginModule('register')">
-          {{ $t(loginModuleRecord.register) }}
-        </AButton>
-      </div>
     </ASpace>
   </AForm>
 </template>

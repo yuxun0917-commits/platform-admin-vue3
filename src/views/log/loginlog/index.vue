@@ -125,11 +125,11 @@ function loginTypeColor(type: number) {
 
 const columns = [
   {
-    title: '日志编号',
-    dataIndex: 'id',
+    title: '序号',
     key: 'id',
     align: 'center' as const,
-    width: 90
+    width: 120,
+    minWidth: 120
   },
   {
     title: '登录用户',
@@ -137,6 +137,7 @@ const columns = [
     key: 'username',
     align: 'center' as const,
     width: 120,
+    minWidth: 120,
     ellipsis: true
   },
   {
@@ -144,14 +145,16 @@ const columns = [
     dataIndex: 'loginTypeText',
     key: 'loginTypeText',
     align: 'center' as const,
-    width: 110
+    width: 110,
+    minWidth: 110
   },
   {
     title: '登录状态',
     dataIndex: 'statusText',
     key: 'statusText',
     align: 'center' as const,
-    width: 100
+    width: 100,
+    minWidth: 100
   },
   {
     title: '登录 IP',
@@ -159,6 +162,7 @@ const columns = [
     key: 'loginIp',
     align: 'center' as const,
     width: 170,
+    minWidth: 170,
     ellipsis: true
   },
   {
@@ -167,6 +171,7 @@ const columns = [
     key: 'loginLocation',
     align: 'center' as const,
     width: 120,
+    minWidth: 120,
     ellipsis: true
   },
   {
@@ -174,28 +179,32 @@ const columns = [
     dataIndex: 'browser',
     key: 'browser',
     align: 'center' as const,
-    width: 110
+    width: 110,
+    minWidth: 110
   },
   {
     title: '操作系统',
     dataIndex: 'os',
     key: 'os',
     align: 'center' as const,
-    width: 110
+    width: 110,
+    minWidth: 110
   },
   {
     title: '登录时间',
     dataIndex: 'loginTime',
     key: 'loginTime',
     align: 'center' as const,
-    width: 170
+    width: 170,
+    minWidth: 170
   },
   {
     title: '操作',
     key: 'action',
     align: 'center' as const,
     fixed: 'right' as const,
-    width: 140
+    width: 140,
+    minWidth: 140
   }
 ];
 
@@ -256,11 +265,14 @@ onMounted(async () => {
         :pagination="pagination"
         row-key="id"
         size="small"
-        :scroll="{ x: 1240 }"
+        :scroll="{ x: 1270 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'loginTypeText'">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'id'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
+          <template v-else-if="column.key === 'loginTypeText'">
             <ATag :color="loginTypeColor((record as Api.SysLoginLog.SysLoginLogVO).loginType)">
               {{ (record as Api.SysLoginLog.SysLoginLogVO).loginTypeText }}
             </ATag>
@@ -280,6 +292,9 @@ onMounted(async () => {
               </AButton>
             </ASpace>
           </template>
+        </template>
+        <template #emptyText>
+          <div></div>
         </template>
       </ATable>
     </ACard>

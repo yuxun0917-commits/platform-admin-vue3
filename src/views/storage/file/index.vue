@@ -174,6 +174,12 @@ function handleDelete(row: Api.Attachment.AttachmentVO) {
 
 const columns = [
   {
+    title: '序号',
+    key: 'index',
+    align: 'center' as const,
+    width: 70
+  },
+  {
     title: '文件名',
     dataIndex: 'fileName',
     key: 'fileName',
@@ -290,9 +296,13 @@ onBeforeUnmount(revokePreviewUrl);
         :pagination="pagination"
         row-key="id"
         size="small"
+        :scroll="{ x: 1060 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
           <template v-if="column.key === 'fileName'">
             <span>{{ (record as Api.Attachment.AttachmentVO).fileName }}</span>
           </template>

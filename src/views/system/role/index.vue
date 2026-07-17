@@ -199,7 +199,7 @@ async function submitSort(ids: number[]) {
 const columns = computed(() => {
   const cols: any[] = [
     {
-      title: '拖拽',
+      title: '',
       key: 'drag',
       align: 'center' as const,
       width: 60
@@ -297,7 +297,7 @@ onMounted(() => {
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'drag'">
               <div class="h-24px flex-center cursor-grab select-none text-18px text-gray-400" title="拖拽排序">
-                <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" style="pointer-events: none">
+                <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" class="pointer-events-none">
                   <circle cx="7" cy="5" r="1.6" fill="currentColor" />
                   <circle cx="13" cy="5" r="1.6" fill="currentColor" />
                   <circle cx="7" cy="10" r="1.6" fill="currentColor" />

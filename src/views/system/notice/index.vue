@@ -114,6 +114,12 @@ function positionLabel(position: number) {
 
 const columns = [
   {
+    title: '序号',
+    key: 'index',
+    align: 'center' as const,
+    width: 70
+  },
+  {
     title: '标题',
     dataIndex: 'title',
     key: 'title',
@@ -210,10 +216,13 @@ onMounted(() => {
         :pagination="pagination"
         row-key="id"
         size="small"
-        :scroll="{ x: 1210 }"
+        :scroll="{ x: 1280 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
           <template v-if="column.key === 'position'">
             <ATag :color="(record as Api.Notice.NoticeVO).position === 2 ? 'blue' : 'default'">
               {{ positionLabel((record as Api.Notice.NoticeVO).position) }}

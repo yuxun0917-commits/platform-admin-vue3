@@ -3,6 +3,11 @@ import { defineConfig } from '@soybeanjs/eslint-config';
 export default defineConfig(
   { vue: true, unocss: true },
   {
+    languageOptions: {
+      globals: {
+        Api: 'readonly'
+      }
+    },
     rules: {
       'vue/multi-word-component-names': [
         'warn',

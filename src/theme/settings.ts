@@ -20,12 +20,12 @@ export const themeSettings: App.Theme.ThemeSetting = {
   },
   page: {
     animate: true,
-    animateMode: 'fade-slide'
+    animateMode: 'zoom-out'
   },
   header: {
     height: 56,
     breadcrumb: {
-      visible: true,
+      visible: false,
       showIcon: true
     }
   },
@@ -33,7 +33,7 @@ export const themeSettings: App.Theme.ThemeSetting = {
     visible: true,
     cache: true,
     height: 44,
-    mode: 'chrome'
+    mode: 'button'
   },
   fixedHeaderAndTab: true,
   sider: {
@@ -45,14 +45,14 @@ export const themeSettings: App.Theme.ThemeSetting = {
     mixChildMenuWidth: 200
   },
   footer: {
-    visible: true,
+    visible: false,
     fixed: false,
     height: 48,
     right: true
   },
   watermark: {
     visible: false,
-    text: 'SoybeanAdmin'
+    text: 'platform-admin'
   },
   tokens: {
     light: {
