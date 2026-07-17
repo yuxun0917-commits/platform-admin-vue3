@@ -331,4 +331,114 @@ declare namespace Api {
       children?: MenuTree[];
     };
   }
+
+  /**
+   * namespace StorageConfig
+   *
+   * backend api module: "storage-config"
+   */
+  namespace StorageConfig {
+    /** 存储类型: 1本地 2阿里云OSS 3腾讯COS 4MinIO */
+    type StorageType = 1 | 2 | 3 | 4;
+
+    /** 是否(0否 1是) */
+    type BoolInt = 0 | 1;
+
+    /** 存储配置展示 VO (GET /storage-config/view, /page, /select-list) */
+    interface ConfigVO {
+      /** 配置ID */
+      id: number;
+      /** 配置名称 */
+      configName: string;
+      /** 存储类型(1本地 2阿里云OSS 3腾讯COS 4MinIO) */
+      storageType: StorageType;
+      /** 存储类型描述 */
+      storageTypeText: string;
+      /** 访问域名/接入点 */
+      endpoint: string;
+      /** 地域 */
+      region: string;
+      /** 存储桶名 */
+      bucket: string;
+      /** AccessKey(脱敏) */
+      accessKey: string;
+      /** SecretKey(脱敏) */
+      secretKey: string;
+      /** 本地根路径/对象存储前缀 */
+      basePath: string;
+      /** 自定义访问域名/CDN */
+      domain: string;
+      /** 是否https(0否 1是) */
+      isHttps: BoolInt;
+      /** 是否默认(0否 1是) */
+      isDefault: BoolInt;
+      /** 状态(1启用 0停用) */
+      status: Api.Common.EnableStatus;
+      /** 状态描述 */
+      statusText: string;
+      /** 备注 */
+      remark: string;
+      /** 创建时间 */
+      createTime: string;
+      /** 更新时间 */
+      updateTime: string;
+    }
+
+    /** 存储配置分页查询参数 (GET /storage-config/page) */
+    interface ConfigPageParams {
+      /** 当前页(1-based) */
+      page?: number;
+      /** 页大小 */
+      pageSize?: number;
+      /** 状态(1启用 0停用) */
+      status?: number;
+      /** 关键词(配置名称/接入点) */
+      keyword?: string;
+    }
+
+    /** 存储配置分页结果 (BackendPagingResult) */
+    type ConfigPageResult = Api.Common.BackendPagingResult<ConfigVO>;
+
+    /** 新增参数 (POST /storage-config/add) */
+    interface ConfigSaveVO {
+      /** 配置名称 */
+      configName: string;
+      /** 存储类型 */
+      storageType: StorageType;
+      /** 访问域名/接入点 */
+      endpoint?: string;
+      /** 地域 */
+      region?: string;
+      /** 存储桶名 */
+      bucket?: string;
+      /** AccessKey */
+      accessKey?: string;
+      /** SecretKey */
+      secretKey?: string;
+      /** 本地根路径/对象存储前缀 */
+      basePath?: string;
+      /** 自定义访问域名/CDN */
+      domain?: string;
+      /** 是否https */
+      isHttps: BoolInt;
+      /** 状态 */
+      status: Api.Common.EnableStatus;
+      /** 备注 */
+      remark?: string;
+    }
+
+    /** 编辑参数 (POST /storage-config/edit) */
+    interface ConfigEditVO extends ConfigSaveVO {
+      /** 配置ID */
+      id: number;
+    }
+
+    /** 枚举返回 (GET /storage-config/enums) */
+    interface ConfigEnums {
+      /** 存储类型枚举 */
+      storageType: Api.Common.EnumOption[];
+      /** 状态枚举 */
+      status: Api.Common.EnumOption[];
+    }
+  }
 }

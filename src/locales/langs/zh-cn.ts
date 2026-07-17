@@ -185,7 +185,10 @@ const local: App.I18n.Schema = {
     log_loginlog: '登录日志',
     monitor: '系统监控',
     monitor_job: '定时任务',
-    monitor_server: '服务监控'
+    monitor_server: '服务监控',
+    storage: '存储管理',
+    storage_config: '存储配置',
+    storage_file: '文件管理'
   },
   page: {
     login: {

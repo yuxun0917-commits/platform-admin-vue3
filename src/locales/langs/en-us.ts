@@ -185,7 +185,10 @@ const local: App.I18n.Schema = {
     log_loginlog: 'Login Log',
     monitor: 'Monitor',
     monitor_job: 'Scheduled Job',
-    monitor_server: 'Server Monitor'
+    monitor_server: 'Server Monitor',
+    storage: 'Storage',
+    storage_config: 'Storage Config',
+    storage_file: 'File Management'
   },
   page: {
     login: {

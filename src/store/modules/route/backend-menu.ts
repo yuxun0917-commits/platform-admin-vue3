@@ -16,31 +16,54 @@ import BaseLayout from '@/layouts/base-layout/index.vue';
  * - buttons (menuType === 3) are dropped from routing/menus
  */
 
-/** All view files under src/views, keyed by '@/views/...' path */
-const viewModules = import.meta.glob('@/views/**/*.vue');
-const viewKeys = Object.keys(viewModules);
+/**
+ * All view files under src/views.
+ *
+ * NOTE: Vite resolves the glob pattern and returns keys as **project-root-absolute**
+ * paths, e.g. `/src/views/system/user/index.vue` — NOT `@/views/...`. Matching against
+ * `@/views/...` keys would therefore never hit. We normalize every key below so lookups
+ * are prefix-agnostic.
+ */
+const viewModules = import.meta.glob('/src/views/**/*.vue');
 
-/** Fallback component for menus whose view file has not been built yet */
-function comingSoon(): RouteComponent {
-  return () => import('@/views/_builtin/coming-soon/index.vue');
+/**
+ * Normalize a raw path/component string to a canonical form for matching:
+ * strip the `@/views/` or `/src/views/` (or leading `/`) prefix, the `.vue` suffix,
+ * and a trailing `/index`. e.g.
+ *   "/src/views/system/user/index.vue" -> "system/user"
+ *   "system/user/index"                -> "system/user"
+ *   "system/user"                      -> "system/user"
+ */
+function normalizeViewPath(value: string): string {
+  return value
+    .replace(/^@\/views\//, '')
+    .replace(/^\/src\/views\//, '')
+    .replace(/^\/+/, '')
+    .replace(/\.vue$/, '')
+    .replace(/\/index$/, '');
+}
+
+/** canonical view path (e.g. "system/user") -> lazy loader */
+const viewMap: Record<string, RouteComponent> = {};
+for (const key of Object.keys(viewModules)) {
+  viewMap[normalizeViewPath(key)] = viewModules[key] as RouteComponent;
 }
 
 /**
- * Build candidate view module keys from a backend component string.
+ * Resolve a backend component string to a lazy Vue component.
  *
- * The backend `component` may be written in several equivalent ways, e.g.
- *   "system/user/index" | "system/user" | "manage/user/index" | "user/index" | "user"
- * We try them all, plus a fuzzy match on the last meaningful path segment,
- * so the frontend view is located regardless of the exact prefix the backend
- * menu table uses.
+ * The backend `component` may be written several equivalent ways, e.g.
+ *   "system/user/index" | "system/user" | "manage/user/index" | "user/index" | "user".
+ * We normalize it and try a few common top-level prefix strips against the view map.
+ *
+ * Returns `undefined` when no matching view file exists (strict matching — no fuzzy /
+ * last-segment guessing, and no coming-soon fallback). In that case the route is still
+ * registered and the sidebar entry still shows, but no page component is mounted.
  */
-function buildComponentCandidates(component?: string | null): string[] {
-  if (!component) return [];
+function resolveViewComponent(component?: string | null): RouteComponent | undefined {
+  if (!component) return undefined;
 
-  const raw = component
-    .replace(/^@\/views\//, '')
-    .replace(/^\/+/, '')
-    .replace(/\.vue$/, '');
+  const raw = normalizeViewPath(component);
 
   const variants = new Set<string>([raw]);
 
@@ -49,49 +72,14 @@ function buildComponentCandidates(component?: string | null): string[] {
     if (raw.startsWith(prefix)) variants.add(raw.slice(prefix.length));
   }
 
-  const keys: string[] = [];
   for (const v of variants) {
-    if (v) {
-      keys.push(`@/views/${v}.vue`);
-      keys.push(`@/views/${v}/index.vue`);
-    }
+    if (v && viewMap[v]) return viewMap[v];
   }
 
-  // fuzzy: match by the last non-"index" segment, e.g. "system/user/index" -> "user"
-  const lastName = raw
-    .split('/')
-    .filter(Boolean)
-    .filter(s => s !== 'index')
-    .pop();
+  // eslint-disable-next-line no-console
+  console.error(`[backend-menu] 未找到视图组件: component="${component}"`);
 
-  if (lastName) {
-    for (const k of viewKeys) {
-      if (k.endsWith(`/${lastName}/index.vue`) || k.endsWith(`/${lastName}.vue`)) {
-        keys.push(k);
-      }
-    }
-  }
-
-  return keys;
-}
-
-/**
- * Resolve a backend component string to a lazy Vue component.
- */
-function resolveViewComponent(component?: string | null): RouteComponent {
-  const candidates = buildComponentCandidates(component);
-
-  for (const key of candidates) {
-    const loader = viewModules[key];
-    if (loader) return loader as RouteComponent;
-  }
-
-  if (component) {
-    // eslint-disable-next-line no-console
-    console.warn(`[backend-menu] 未找到视图组件: component="${component}"`);
-  }
-
-  return comingSoon();
+  return undefined;
 }
 
 /** Build an absolute vue-router path from parent path + node path */
@@ -142,7 +130,11 @@ function buildRoute(menu: Api.Auth.MenuTree, parentPath: string): RouteRecordRaw
       route.redirect = normalizePath(fullPath, menu.redirect);
     }
   } else {
-    route.component = resolveViewComponent(menu.component);
+    const comp = resolveViewComponent(menu.component);
+    // 命中不到 component：仍注册路由并保留侧边菜单，但不挂载页面组件（不渲染具体页面）
+    if (comp) {
+      route.component = comp;
+    }
   }
 
   if (menu.isExternal === 1) {

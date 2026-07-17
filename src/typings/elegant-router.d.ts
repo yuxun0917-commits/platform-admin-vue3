@@ -42,6 +42,9 @@ declare module "@elegant-router/types" {
     "monitor": "/monitor";
     "monitor_job": "/monitor/job";
     "monitor_server": "/monitor/server";
+    "storage": "/storage";
+    "storage_config": "/storage/config";
+    "storage_file": "/storage/file";
     "system": "/system";
     "system_config": "/system/config";
     "system_dept": "/system/dept";
@@ -103,6 +106,7 @@ declare module "@elegant-router/types" {
     | "log"
     | "login"
     | "monitor"
+    | "storage"
     | "system"
   >;
 
@@ -133,6 +137,8 @@ declare module "@elegant-router/types" {
     | "log_operlog"
     | "monitor_job"
     | "monitor_server"
+    | "storage_config"
+    | "storage_file"
     | "system_config"
     | "system_dept"
     | "system_dict"

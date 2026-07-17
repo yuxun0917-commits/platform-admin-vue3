@@ -53,6 +53,15 @@ export function fetchRefreshToken(refreshToken: string) {
 }
 
 /**
+ * Logout
+ *
+ * Calls backend `POST /auth/logout` to invalidate the current session/token.
+ */
+export function fetchLogout() {
+  return request({ url: '/auth/logout', method: 'post' });
+}
+
+/**
  * return custom backend error
  *
  * @param code error code

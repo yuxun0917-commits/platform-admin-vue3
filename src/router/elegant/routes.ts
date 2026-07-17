@@ -143,6 +143,35 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'storage',
+    path: '/storage',
+    component: 'layout.base',
+    meta: {
+      title: 'storage',
+      i18nKey: 'route.storage'
+    },
+    children: [
+      {
+        name: 'storage_config',
+        path: '/storage/config',
+        component: 'view.storage_config',
+        meta: {
+          title: 'storage_config',
+          i18nKey: 'route.storage_config'
+        }
+      },
+      {
+        name: 'storage_file',
+        path: '/storage/file',
+        component: 'view.storage_file',
+        meta: {
+          title: 'storage_file',
+          i18nKey: 'route.storage_file'
+        }
+      }
+    ]
+  },
+  {
     name: 'system',
     path: '/system',
     component: 'layout.base',

@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './attachment';
 export * from './dept';
 export * from './dict';
 export * from './job';
@@ -12,4 +13,5 @@ export * from './role';
 export * from './route';
 export * from './sysLog';
 export * from './sysLoginLog';
+export * from './storage-config';
 export * from './user';
