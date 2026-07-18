@@ -30,6 +30,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
     async onBackendFail(response, instance) {
       const authStore = useAuthStore();
       const responseCode = String(response.data.code);
+      const requestUrl = response.config.url || '';
 
       function handleLogout() {
         authStore.resetStore();
@@ -40,6 +41,11 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         window.removeEventListener('beforeunload', handleLogout);
 
         request.state.errMsgStack = request.state.errMsgStack.filter(msg => msg !== response.data.msg);
+      }
+
+      // 登录接口返回任何非成功 code 都不应触发「会话过期」的登出流程，否则失败一次就循环 logout
+      if (requestUrl === '/auth/login' || requestUrl.endsWith('/auth/login')) {
+        return null;
       }
 
       // when the backend response code is in `logoutCodes`, it means the user will be logged out and redirected to login page

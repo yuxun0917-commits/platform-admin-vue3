@@ -206,7 +206,8 @@ const local: App.I18n.Schema = {
         back: 'Back',
         validateSuccess: 'Verification passed',
         loginSuccess: 'Login successfully',
-        welcomeBack: 'Welcome back, {userName} !'
+        welcomeBack: 'Welcome back, {userName} !',
+        encryptFail: 'Failed to encrypt login credentials, please retry'
       },
       pwdLogin: {
         title: 'Password Login',

@@ -88,6 +88,9 @@ declare namespace Api {
       base64Image: string;
     }
 
+    /** RSA 公钥（Base64 编码的 X.509 DER，供前端加密用户名/密码） */
+    type RsaPublicKey = string;
+
     /**
      * Backend `UserInfoVO` returned by `GET /user/info`
      *

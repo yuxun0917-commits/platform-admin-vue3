@@ -2,7 +2,7 @@ import { request } from '../request';
 
 /** GET /dept/select-list - 部门选择列表（原用户模块/角色模块已使用） */
 export function fetchDeptSelectList(params?: Api.Dept.DeptSelectParams) {
-  return request<Api.Dept.DeptSelectVO[]>({
+  return request<Api.Common.BackendPagingResult<Api.Dept.DeptSelectVO>>({
     url: '/dept/select-list',
     method: 'get',
     params

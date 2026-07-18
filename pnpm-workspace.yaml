@@ -1,5 +1,7 @@
 packages:
   - "packages/*"
+overrides:
+  dayjs: 1.11.19
 allowBuilds:
   '@parcel/watcher': true
   core-js: true

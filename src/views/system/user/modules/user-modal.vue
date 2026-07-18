@@ -6,7 +6,8 @@ import {
   fetchPostSelectList,
   fetchRoleSelectList,
   fetchUserAdd,
-  fetchUserEdit
+  fetchUserEdit,
+  fetchUserView
 } from '@/service/api';
 
 defineOptions({
@@ -49,22 +50,48 @@ const roleOptions = ref<Api.Role.RoleSelectVO[]>([]);
 const postOptions = ref<Api.Post.PostSelectVO[]>([]);
 const loading = ref(false);
 
-async function loadSelectOptions() {
-  const [deptRes, roleRes, postRes] = await Promise.all([
-    fetchDeptSelectList({ page: 1, pageSize: 100 }),
-    fetchRoleSelectList({ page: 1, pageSize: 100 }),
-    fetchPostSelectList({ page: 1, pageSize: 100 })
-  ]);
+async function loadDeptOptions(keyword?: string) {
+  const { data, error } = await fetchDeptSelectList({ page: 1, pageSize: 100, keyword: keyword || undefined });
+  if (!error && data) {
+    deptOptions.value = data.records ?? [];
+  }
+}
 
-  if (!deptRes.error && deptRes.data) {
-    deptOptions.value = deptRes.data;
+async function loadRoleOptions(keyword?: string) {
+  const { data, error } = await fetchRoleSelectList({ page: 1, pageSize: 100, keyword: keyword || undefined });
+  if (!error && data) {
+    roleOptions.value = data.records;
   }
-  if (!roleRes.error && roleRes.data) {
-    roleOptions.value = roleRes.data.records;
+}
+
+async function loadPostOptions(keyword?: string) {
+  const { data, error } = await fetchPostSelectList({ page: 1, pageSize: 100, keyword: keyword || undefined });
+  if (!error && data) {
+    postOptions.value = data.records;
   }
-  if (!postRes.error && postRes.data) {
-    postOptions.value = postRes.data.records;
-  }
+}
+
+async function loadSelectOptions() {
+  await Promise.all([loadDeptOptions(), loadRoleOptions(), loadPostOptions()]);
+}
+
+let deptSearchTimer: ReturnType<typeof setTimeout> | null = null;
+let roleSearchTimer: ReturnType<typeof setTimeout> | null = null;
+let postSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
+function handleDeptSearch(keyword: string) {
+  if (deptSearchTimer) clearTimeout(deptSearchTimer);
+  deptSearchTimer = setTimeout(() => loadDeptOptions(keyword), 300);
+}
+
+function handleRoleSearch(keyword: string) {
+  if (roleSearchTimer) clearTimeout(roleSearchTimer);
+  roleSearchTimer = setTimeout(() => loadRoleOptions(keyword), 300);
+}
+
+function handlePostSearch(keyword: string) {
+  if (postSearchTimer) clearTimeout(postSearchTimer);
+  postSearchTimer = setTimeout(() => loadPostOptions(keyword), 300);
 }
 
 function resetForm() {
@@ -81,29 +108,37 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.username = props.row.username;
-    formModel.nickname = props.row.nickname;
-    formModel.gender = props.row.gender ?? 0;
-    formModel.birthday = props.row.birthday;
-    formModel.email = props.row.email;
-    formModel.phone = props.row.phone;
-    formModel.deptId = props.row.deptId;
-    formModel.rIds = props.row.rIds ?? [];
-    formModel.pIds = props.row.pIds ?? [];
-    formModel.remark = props.row.remark;
-  }
+function setFormFromData(data: Api.User.UserVO) {
+  formModel.id = data.id;
+  formModel.username = data.username;
+  formModel.nickname = data.nickname;
+  formModel.gender = data.gender ?? 0;
+  formModel.birthday = data.birthday;
+  formModel.email = data.email ?? '';
+  formModel.phone = data.phone ?? '';
+  formModel.deptId = data.deptId;
+  formModel.rIds = data.rIds ?? [];
+  formModel.pIds = data.pIds ?? [];
+  formModel.remark = data.remark ?? '';
 }
+
+const detailLoading = ref(false);
 
 watch(
   () => props.visible,
-  visible => {
+  async visible => {
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        detailLoading.value = true;
+        const { data, error } = await fetchUserView(props.row.id);
+        detailLoading.value = false;
+        if (!error && data) {
+          setFormFromData(data);
+        } else if (props.row) {
+          // 详情拉取失败时降级使用表格行数据
+          setFormFromData(props.row);
+        }
       }
     }
   }
@@ -154,54 +189,101 @@ const genderOptions: SelectProps['options'] = [
     :open="visible"
     :title="title"
     :confirm-loading="loading"
-    width="640px"
+    width="760px"
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-      <AFormItem label="用户名" name="username" :rules="[{ required: true, message: '请输入用户名' }]">
-        <AInput v-model:value="formModel.username" placeholder="请输入用户名" :disabled="type === 'edit'" />
-      </AFormItem>
-      <AFormItem label="昵称" name="nickname" :rules="[{ required: true, message: '请输入昵称' }]">
-        <AInput v-model:value="formModel.nickname" placeholder="请输入昵称" />
-      </AFormItem>
-      <AFormItem label="性别" name="gender">
-        <ASelect v-model:value="formModel.gender" :options="genderOptions" placeholder="请选择性别" />
-      </AFormItem>
-      <AFormItem label="出生日期" name="birthday">
-        <ADatePicker
-          v-model:value="formModel.birthday"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择出生日期"
-          class="w-full"
-        />
-      </AFormItem>
-      <AFormItem label="邮箱" name="email">
-        <AInput v-model:value="formModel.email" placeholder="请输入邮箱" />
-      </AFormItem>
-      <AFormItem label="手机号" name="phone">
-        <AInput v-model:value="formModel.phone" placeholder="请输入手机号" />
-      </AFormItem>
-      <AFormItem label="部门" name="deptId" :rules="[{ required: true, message: '请选择部门' }]">
-        <ASelect v-model:value="formModel.deptId" placeholder="请选择部门" allow-clear>
-          <ASelectOption v-for="item in deptOptions" :key="item.id" :value="item.id">{{ item.deptName }}</ASelectOption>
-        </ASelect>
-      </AFormItem>
-      <AFormItem label="角色" name="rIds">
-        <ASelect v-model:value="formModel.rIds" mode="multiple" placeholder="请选择角色" allow-clear>
-          <ASelectOption v-for="item in roleOptions" :key="item.id" :value="item.id">{{ item.roleName }}</ASelectOption>
-        </ASelect>
-      </AFormItem>
-      <AFormItem label="岗位" name="pIds">
-        <ASelect v-model:value="formModel.pIds" mode="multiple" placeholder="请选择岗位" allow-clear>
-          <ASelectOption v-for="item in postOptions" :key="item.id" :value="item.id">{{ item.postName }}</ASelectOption>
-        </ASelect>
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="detailLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
+        <div class="form-grid">
+          <AFormItem label="用户名" name="username" :rules="[{ required: true, message: '请输入用户名' }]">
+            <AInput v-model:value="formModel.username" placeholder="请输入用户名" :disabled="type === 'edit'" />
+          </AFormItem>
+          <AFormItem label="昵称" name="nickname" :rules="[{ required: true, message: '请输入昵称' }]">
+            <AInput v-model:value="formModel.nickname" placeholder="请输入昵称" />
+          </AFormItem>
+          <AFormItem label="性别" name="gender">
+            <ASelect v-model:value="formModel.gender" :options="genderOptions" placeholder="请选择性别" />
+          </AFormItem>
+          <AFormItem label="出生日期" name="birthday">
+            <ADatePicker
+              v-model:value="formModel.birthday"
+              value-format="YYYY-MM-DD"
+              placeholder="请选择出生日期"
+              class="w-full"
+            />
+          </AFormItem>
+          <AFormItem label="邮箱" name="email">
+            <AInput v-model:value="formModel.email" placeholder="请输入邮箱" />
+          </AFormItem>
+          <AFormItem label="手机号" name="phone">
+            <AInput v-model:value="formModel.phone" placeholder="请输入手机号" />
+          </AFormItem>
+          <AFormItem label="部门" name="deptId" :rules="[{ required: true, message: '请选择部门' }]">
+            <ASelect
+              v-model:value="formModel.deptId"
+              placeholder="请选择部门（可搜索）"
+              allow-clear
+              show-search
+              :filter-option="false"
+              @search="handleDeptSearch"
+            >
+              <ASelectOption v-for="item in deptOptions" :key="item.id" :value="item.id">
+                {{ item.deptName }}
+              </ASelectOption>
+            </ASelect>
+          </AFormItem>
+          <AFormItem label="角色" name="rIds">
+            <ASelect
+              v-model:value="formModel.rIds"
+              mode="multiple"
+              placeholder="请选择角色（可搜索）"
+              allow-clear
+              show-search
+              :filter-option="false"
+              @search="handleRoleSearch"
+            >
+              <ASelectOption v-for="item in roleOptions" :key="item.id" :value="item.id">
+                {{ item.roleName }}
+              </ASelectOption>
+            </ASelect>
+          </AFormItem>
+          <AFormItem label="岗位" name="pIds">
+            <ASelect
+              v-model:value="formModel.pIds"
+              mode="multiple"
+              placeholder="请选择岗位（可搜索）"
+              allow-clear
+              show-search
+              :filter-option="false"
+              @search="handlePostSearch"
+            >
+              <ASelectOption v-for="item in postOptions" :key="item.id" :value="item.id">
+                {{ item.postName }}
+              </ASelectOption>
+            </ASelect>
+          </AFormItem>
+          <AFormItem label="备注" name="remark" class="form-item-full">
+            <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
+          </AFormItem>
+        </div>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 
-<style scoped></style>
+<style scoped>
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 16px;
+}
+
+.form-item-full {
+  grid-column: 1 / -1;
+}
+
+.form-item-full :deep(.ant-form-item-label) {
+  flex: 0 0 calc(5 / 48 * 100%) !important;
+}
+</style>

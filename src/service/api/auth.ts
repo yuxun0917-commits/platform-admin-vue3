@@ -61,6 +61,14 @@ export function fetchLogout() {
   return request({ url: '/auth/logout', method: 'post' });
 }
 
+/** GET /auth/rsa/public-key - 获取 RSA 公钥（Base64 编码的 X.509 DER） */
+export function fetchRsaPublicKey() {
+  return request<Api.Auth.RsaPublicKey>({
+    url: '/auth/rsa/public-key',
+    method: 'get'
+  });
+}
+
 /**
  * return custom backend error
  *

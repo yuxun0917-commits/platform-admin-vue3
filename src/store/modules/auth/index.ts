@@ -5,6 +5,7 @@ import { useLoading } from '@sa/hooks';
 import { fetchCaptcha, fetchGetUserInfo, fetchLogin, fetchLogout } from '@/service/api';
 import { useRouterPush } from '@/hooks/common/router';
 import { localStg } from '@/utils/storage';
+import { encryptByRsa } from '@/utils/crypto/rsa';
 import { SetupStoreId } from '@/enum';
 import { $t } from '@/locales';
 import { useRouteStore } from '../route';
@@ -62,8 +63,10 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   async function resetStore() {
     const authStore = useAuthStore();
 
-    // notify backend to invalidate the current session before clearing local state
-    await fetchLogout().catch(() => {});
+    // 没有 token 时无需通知后端登出，避免登录失败等场景触发 logout 循环
+    if (getToken()) {
+      await fetchLogout().catch(() => {});
+    }
 
     clearAuthStorage();
 
@@ -95,12 +98,21 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
 
     const { redirect = true, captchaKey: captchaKeyValue = '', captchaCode = '' } = options ?? {};
 
-    const { data: loginToken, error } = await fetchLogin(userName, password, {
+    // 用户名、密码用 RSA 公钥加密后再提交
+    const [encryptedUser, encryptedPwd] = await Promise.all([encryptByRsa(userName), encryptByRsa(password)]);
+    if (!encryptedUser || !encryptedPwd) {
+      window.$message?.error($t('page.login.common.encryptFail'));
+      await getCaptcha();
+      endLoading();
+      return;
+    }
+
+    const { data: loginToken, error } = await fetchLogin(encryptedUser, encryptedPwd, {
       captchaKey: captchaKeyValue,
       captchaCode
     });
 
-    if (!error) {
+    if (!error && loginToken) {
       const pass = await loginByToken(loginToken);
 
       if (pass) {
@@ -110,9 +122,13 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
           message: $t('page.login.common.loginSuccess'),
           description: $t('page.login.common.welcomeBack', { userName: userInfo.user.username })
         });
+      } else {
+        // token 已写入但 userInfo 拉取失败，清除半成品登录态
+        resetStore();
       }
     } else {
-      resetStore();
+      // 登录失败：刷新验证码即可，不要 resetStore 触发 logout 循环
+      await getCaptcha();
     }
 
     endLoading();
