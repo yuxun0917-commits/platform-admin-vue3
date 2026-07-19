@@ -3,11 +3,14 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { Modal } from 'ant-design-vue';
 import Sortable from 'sortablejs';
 import { fetchDeptDelete, fetchDeptEditStatus, fetchDeptEnums, fetchDeptSort, fetchDeptTree } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import DeptModal from './modules/dept-modal.vue';
 
 defineOptions({
   name: 'SystemDept'
 });
+
+const { hasAuth } = useAuth();
 
 interface SearchParams {
   keyword: string;
@@ -305,7 +308,13 @@ function initSortable() {
 }
 
 // 数据或展开状态变化后，待 DOM 更新重新初始化 Sortable
-watch([tableData, expandedKeys], () => nextTick(initSortable));
+watch([tableData, expandedKeys], () => {
+  if (hasAuth('system:dept:sort')) {
+    nextTick(initSortable);
+  } else {
+    nextTick(destroySortable);
+  }
+});
 
 async function submitSort({ parentId, ids }: { parentId: number; ids: number[] }) {
   const { error } = await fetchDeptSort({ parentId, ids });
@@ -320,12 +329,16 @@ async function submitSort({ parentId, ids }: { parentId: number; ids: number[] }
 
 const columns = computed(() => {
   const cols: any[] = [
-    {
-      title: '',
-      key: 'drag',
-      align: 'center' as const,
-      width: 64
-    },
+    ...(hasAuth('system:dept:sort')
+      ? [
+          {
+            title: '',
+            key: 'drag',
+            align: 'center' as const,
+            width: 64
+          }
+        ]
+      : []),
     {
       title: '部门名称',
       dataIndex: 'deptName',
@@ -414,9 +427,9 @@ onMounted(() => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px flex items-center gap-12px">
-        <AButton type="primary" @click="handleAdd">新增部门</AButton>
+        <AButton v-if="hasAuth('system:dept:add')" type="primary" @click="handleAdd">新增部门</AButton>
         <AButton @click="toggleExpandAll">{{ allExpanded ? '全部折叠' : '全部展开' }}</AButton>
-        <span class="text-12px text-gray-400">
+        <span v-if="hasAuth('system:dept:sort')" class="text-12px text-gray-400">
           拖动时红色虚线框会圈出可放置的
           <b class="text-red-500">同级范围</b>
           ，跨级不可拖
@@ -430,7 +443,7 @@ onMounted(() => {
           :pagination="false"
           row-key="id"
           size="small"
-          :expand-icon-column-index="1"
+          :expand-icon-column-index="hasAuth('system:dept:sort') ? 1 : 0"
           :expanded-row-keys="expandedKeys"
           :scroll="{ x: 1214 }"
           children-column-name="children"
@@ -439,7 +452,11 @@ onMounted(() => {
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'drag'">
-              <div class="h-24px flex-center cursor-grab select-none text-18px text-gray-400" title="拖拽排序">
+              <div
+                v-if="hasAuth('system:dept:sort')"
+                class="h-24px flex-center cursor-grab select-none text-18px text-gray-400"
+                title="拖拽排序"
+              >
                 <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" style="pointer-events: none">
                   <circle cx="7" cy="5" r="1.6" fill="currentColor" />
                   <circle cx="13" cy="5" r="1.6" fill="currentColor" />
@@ -452,15 +469,38 @@ onMounted(() => {
             </template>
             <template v-if="column.key === 'status'">
               <ASwitch
+                :disabled="!hasAuth('system:dept:editStatus')"
                 :checked="record.status === 1"
                 @change="(checked: any) => handleStatusChange(record as Api.Dept.DeptVO, Boolean(checked))"
               />
             </template>
             <template v-if="column.key === 'action'">
               <ASpace>
-                <AButton type="link" size="small" @click="handleAddChild(record as Api.Dept.DeptVO)">新增下级</AButton>
-                <AButton type="link" size="small" @click="handleEdit(record as Api.Dept.DeptVO)">编辑</AButton>
-                <AButton type="link" size="small" danger @click="handleDelete(record as Api.Dept.DeptVO)">删除</AButton>
+                <AButton
+                  v-if="hasAuth('system:dept:add')"
+                  type="link"
+                  size="small"
+                  @click="handleAddChild(record as Api.Dept.DeptVO)"
+                >
+                  新增下级
+                </AButton>
+                <AButton
+                  v-if="hasAuth('system:dept:edit')"
+                  type="link"
+                  size="small"
+                  @click="handleEdit(record as Api.Dept.DeptVO)"
+                >
+                  编辑
+                </AButton>
+                <AButton
+                  v-if="hasAuth('system:dept:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.Dept.DeptVO)"
+                >
+                  删除
+                </AButton>
               </ASpace>
             </template>
           </template>

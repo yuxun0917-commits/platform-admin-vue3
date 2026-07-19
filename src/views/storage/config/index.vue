@@ -9,11 +9,14 @@ import {
   fetchStorageConfigPage,
   fetchStorageConfigSetDefault
 } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import StorageConfigOperateModal from './modules/storage-config-operate-modal.vue';
 
 defineOptions({
   name: 'StorageConfig'
 });
+
+const { hasAuth } = useAuth();
 
 interface SearchParams {
   keyword: string;
@@ -247,7 +250,7 @@ onMounted(() => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px">
-        <AButton type="primary" @click="handleAdd">新增配置</AButton>
+        <AButton v-if="hasAuth('system:storage:add')" type="primary" @click="handleAdd">新增配置</AButton>
       </div>
       <ATable
         :columns="columns"
@@ -274,20 +277,36 @@ onMounted(() => {
           <template v-if="column.key === 'isDefault'">
             <ASwitch
               :checked="(record as Api.StorageConfig.ConfigVO).isDefault === 1"
-              :disabled="(record as Api.StorageConfig.ConfigVO).isDefault === 1"
+              :disabled="
+                (record as Api.StorageConfig.ConfigVO).isDefault === 1 || !hasAuth('system:storage:setDefault')
+              "
               @change="(checked: any) => handleDefaultChange(record as Api.StorageConfig.ConfigVO, Boolean(checked))"
             />
           </template>
           <template v-if="column.key === 'status'">
             <ASwitch
+              :disabled="!hasAuth('system:storage:edit')"
               :checked="(record as Api.StorageConfig.ConfigVO).status === 1"
               @change="(checked: any) => handleStatusChange(record as Api.StorageConfig.ConfigVO, Boolean(checked))"
             />
           </template>
           <template v-if="column.key === 'action'">
             <ASpace>
-              <AButton type="link" size="small" @click="handleEdit(record as Api.StorageConfig.ConfigVO)">编辑</AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.StorageConfig.ConfigVO)">
+              <AButton
+                v-if="hasAuth('system:storage:edit')"
+                type="link"
+                size="small"
+                @click="handleEdit(record as Api.StorageConfig.ConfigVO)"
+              >
+                编辑
+              </AButton>
+              <AButton
+                v-if="hasAuth('system:storage:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.StorageConfig.ConfigVO)"
+              >
                 删除
               </AButton>
             </ASpace>

@@ -180,7 +180,13 @@ function initSortable() {
 }
 
 // 数据变化后待 DOM 更新重新初始化 Sortable
-watch(tableData, () => nextTick(initSortable));
+watch(tableData, () => {
+  if (hasAuth('system:role:sort')) {
+    nextTick(initSortable);
+  } else {
+    nextTick(destroySortable);
+  }
+});
 
 async function submitSort(ids: number[]) {
   const { error } = await fetchRoleSort({
@@ -198,12 +204,16 @@ async function submitSort(ids: number[]) {
 
 const columns = computed(() => {
   const cols: any[] = [
-    {
-      title: '',
-      key: 'drag',
-      align: 'center' as const,
-      width: 60
-    },
+    ...(hasAuth('system:role:sort')
+      ? [
+          {
+            title: '',
+            key: 'drag',
+            align: 'center' as const,
+            width: 60
+          }
+        ]
+      : []),
     {
       title: '角色名称',
       dataIndex: 'roleName',
@@ -289,7 +299,9 @@ onMounted(() => {
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px">
         <AButton v-if="hasAuth('system:role:add')" type="primary" @click="handleAdd">新增角色</AButton>
-        <span class="pl-12px text-12px text-gray-400">拖动整行（或最左侧手柄）可调整排序</span>
+        <span v-if="hasAuth('system:role:sort')" class="pl-12px text-12px text-gray-400">
+          拖动整行（或最左侧手柄）可调整排序
+        </span>
       </div>
       <div ref="tableWrapRef" class="role-drag-wrap">
         <ATable
@@ -304,7 +316,11 @@ onMounted(() => {
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'drag'">
-              <div class="h-24px flex-center cursor-grab select-none text-18px text-gray-400" title="拖拽排序">
+              <div
+                v-if="hasAuth('system:role:sort')"
+                class="h-24px flex-center cursor-grab select-none text-18px text-gray-400"
+                title="拖拽排序"
+              >
                 <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" class="pointer-events-none">
                   <circle cx="7" cy="5" r="1.6" fill="currentColor" />
                   <circle cx="13" cy="5" r="1.6" fill="currentColor" />

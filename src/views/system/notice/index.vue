@@ -3,11 +3,14 @@ import { onMounted, reactive, ref } from 'vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchNoticeDelete, fetchNoticeEnums, fetchNoticePage } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import NoticeModal from './modules/notice-modal.vue';
 
 defineOptions({
   name: 'SystemNotice'
 });
+
+const { hasAuth } = useAuth();
 
 const searchParams = reactive<{ keyword: string; status: Api.Common.EnableStatus | undefined }>({
   keyword: '',
@@ -207,7 +210,7 @@ onMounted(() => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px">
-        <AButton type="primary" @click="openAdd">新增通知</AButton>
+        <AButton v-if="hasAuth('system:notice:add')" type="primary" @click="openAdd">新增通知</AButton>
       </div>
       <ATable
         :columns="columns"
@@ -235,8 +238,21 @@ onMounted(() => {
           </template>
           <template v-if="column.key === 'action'">
             <ASpace>
-              <AButton type="link" size="small" @click="openEdit(record as Api.Notice.NoticeVO)">编辑</AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.Notice.NoticeVO)">
+              <AButton
+                v-if="hasAuth('system:notice:edit')"
+                type="link"
+                size="small"
+                @click="openEdit(record as Api.Notice.NoticeVO)"
+              >
+                编辑
+              </AButton>
+              <AButton
+                v-if="hasAuth('system:notice:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.Notice.NoticeVO)"
+              >
                 删除
               </AButton>
             </ASpace>

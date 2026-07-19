@@ -20,6 +20,8 @@ declare namespace Api.Post {
     remark?: string;
     /** 创建时间 */
     createTime?: string;
+    /** 更新时间 */
+    updateTime?: string;
   }
 
   /** 新增岗位 VO */

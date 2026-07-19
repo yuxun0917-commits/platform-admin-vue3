@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
-import { fetchSysConfigAdd, fetchSysConfigEdit, fetchSysConfigEnums } from '@/service/api';
+import { fetchSysConfigAdd, fetchSysConfigEdit, fetchSysConfigEnums, fetchSysConfigView } from '@/service/api';
 
 defineOptions({
   name: 'SysConfigModal'
@@ -53,14 +53,20 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.configName = props.row.configName;
-    formModel.configKey = props.row.configKey;
-    formModel.configValue = props.row.configValue;
-    formModel.configType = props.row.configType;
-    formModel.remark = props.row.remark;
+const viewLoading = ref(false);
+
+async function loadSysConfigView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchSysConfigView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.configName = data.configName;
+    formModel.configKey = data.configKey;
+    formModel.configValue = data.configValue;
+    formModel.configType = data.configType;
+    formModel.remark = data.remark ?? '';
   }
 }
 
@@ -70,7 +76,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadSysConfigView();
       }
     }
   }
@@ -119,23 +125,25 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }">
-      <AFormItem label="参数名称" name="configName" :rules="[{ required: true, message: '请输入参数名称' }]">
-        <AInput v-model:value="formModel.configName" placeholder="如 万能验证码" />
-      </AFormItem>
-      <AFormItem label="参数键名" name="configKey" :rules="[{ required: true, message: '请输入参数键名' }]">
-        <AInput v-model:value="formModel.configKey" placeholder="如 sys.bypass.captcha" />
-      </AFormItem>
-      <AFormItem label="参数值" name="configValue" :rules="[{ required: true, message: '请输入参数值' }]">
-        <ATextarea v-model:value="formModel.configValue" :rows="2" placeholder="请输入参数值" />
-      </AFormItem>
-      <AFormItem label="是否内置" name="configType" :rules="[{ required: true, message: '请选择是否内置' }]">
-        <ASelect v-model:value="formModel.configType" :options="configTypeOptions" placeholder="请选择是否内置" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="2" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }">
+        <AFormItem label="参数名称" name="configName" :rules="[{ required: true, message: '请输入参数名称' }]">
+          <AInput v-model:value="formModel.configName" placeholder="如 万能验证码" />
+        </AFormItem>
+        <AFormItem label="参数键名" name="configKey" :rules="[{ required: true, message: '请输入参数键名' }]">
+          <AInput v-model:value="formModel.configKey" placeholder="如 sys.bypass.captcha" />
+        </AFormItem>
+        <AFormItem label="参数值" name="configValue" :rules="[{ required: true, message: '请输入参数值' }]">
+          <ATextarea v-model:value="formModel.configValue" :rows="2" placeholder="请输入参数值" />
+        </AFormItem>
+        <AFormItem label="是否内置" name="configType" :rules="[{ required: true, message: '请选择是否内置' }]">
+          <ASelect v-model:value="formModel.configType" :options="configTypeOptions" placeholder="请选择是否内置" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="2" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

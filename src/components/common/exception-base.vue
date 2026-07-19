@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { $t } from '@/locales';
 import { useRouterPush } from '@/hooks/common/router';
+import { $t } from '@/locales';
 
 defineOptions({ name: 'ExceptionBase' });
 
@@ -37,6 +37,7 @@ const icon = computed(() => iconMap[props.type]);
       <SvgIcon :local-icon="icon" />
     </div>
     <AButton type="primary" @click="routerPushByKey('root')">{{ $t('common.backToHome') }}</AButton>
+    <slot name="extra"></slot>
   </div>
 </template>
 

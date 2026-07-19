@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
-import { fetchPostAdd, fetchPostEdit } from '@/service/api';
+import { fetchPostAdd, fetchPostEdit, fetchPostView } from '@/service/api';
 
 defineOptions({
   name: 'PostModal'
@@ -47,13 +47,19 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.postCode = props.row.postCode;
-    formModel.postName = props.row.postName;
-    formModel.status = props.row.status;
-    formModel.remark = props.row.remark;
+const viewLoading = ref(false);
+
+async function loadPostView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchPostView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.postCode = data.postCode;
+    formModel.postName = data.postName;
+    formModel.status = data.status;
+    formModel.remark = data.remark ?? '';
   }
 }
 
@@ -63,7 +69,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadPostView();
       }
     }
   }
@@ -108,20 +114,22 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-      <AFormItem label="岗位编码" name="postCode" :rules="[{ required: true, message: '请输入岗位编码' }]">
-        <AInput v-model:value="formModel.postCode" placeholder="请输入岗位编码" :disabled="type === 'edit'" />
-      </AFormItem>
-      <AFormItem label="岗位名称" name="postName" :rules="[{ required: true, message: '请输入岗位名称' }]">
-        <AInput v-model:value="formModel.postName" placeholder="请输入岗位名称" />
-      </AFormItem>
-      <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
-        <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
+        <AFormItem label="岗位编码" name="postCode" :rules="[{ required: true, message: '请输入岗位编码' }]">
+          <AInput v-model:value="formModel.postCode" placeholder="请输入岗位编码" :disabled="type === 'edit'" />
+        </AFormItem>
+        <AFormItem label="岗位名称" name="postName" :rules="[{ required: true, message: '请输入岗位名称' }]">
+          <AInput v-model:value="formModel.postName" placeholder="请输入岗位名称" />
+        </AFormItem>
+        <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
+          <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

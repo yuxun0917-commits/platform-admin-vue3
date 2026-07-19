@@ -8,11 +8,14 @@ import {
   fetchSysLoginLogEnums,
   fetchSysLoginLogPage
 } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import LoginlogDetailDrawer from './modules/detail-drawer.vue';
 
 defineOptions({
   name: 'LogLoginlog'
 });
+
+const { hasAuth } = useAuth();
 
 const searchParams = reactive<{ keyword: string; loginType: number | undefined; status: number | undefined }>({
   keyword: '',
@@ -255,7 +258,7 @@ onMounted(async () => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px flex justify-between">
-        <AButton danger @click="handleClean">清空日志</AButton>
+        <AButton v-if="hasAuth('log:loginlog:clean')" danger @click="handleClean">清空日志</AButton>
         <AButton @click="getData">刷新</AButton>
       </div>
       <ATable
@@ -284,10 +287,21 @@ onMounted(async () => {
           </template>
           <template v-else-if="column.key === 'action'">
             <ASpace>
-              <AButton type="link" size="small" @click="openDetail(record as Api.SysLoginLog.SysLoginLogVO)">
+              <AButton
+                v-if="hasAuth('log:loginlog:list')"
+                type="link"
+                size="small"
+                @click="openDetail(record as Api.SysLoginLog.SysLoginLogVO)"
+              >
                 详情
               </AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.SysLoginLog.SysLoginLogVO)">
+              <AButton
+                v-if="hasAuth('log:loginlog:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.SysLoginLog.SysLoginLogVO)"
+              >
                 删除
               </AButton>
             </ASpace>

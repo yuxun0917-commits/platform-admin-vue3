@@ -9,6 +9,7 @@ import {
   fetchUserEnums,
   fetchUserPage
 } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import UserModal from './modules/user-modal.vue';
 import PasswordModal from './modules/password-modal.vue';
 import SecondFactorModal from './modules/second-factor-modal.vue';
@@ -16,6 +17,8 @@ import SecondFactorModal from './modules/second-factor-modal.vue';
 defineOptions({
   name: 'SystemUser'
 });
+
+const { hasAuth } = useAuth();
 
 interface SearchParams {
   keyword: string;
@@ -292,7 +295,7 @@ onMounted(() => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px">
-        <AButton type="primary" @click="handleAdd">新增用户</AButton>
+        <AButton v-if="hasAuth('system:user:add')" type="primary" @click="handleAdd">新增用户</AButton>
       </div>
       <ATable
         :columns="columns"
@@ -322,17 +325,38 @@ onMounted(() => {
           </template>
           <template v-if="column.key === 'status'">
             <ASwitch
+              :disabled="!hasAuth('system:user:editStatus')"
               :checked="record.status === 1"
               @change="(checked: any) => handleStatusChange(record as Api.User.UserVO, Boolean(checked))"
             />
           </template>
           <template v-if="column.key === 'action'">
             <ASpace>
-              <AButton type="link" size="small" @click="handleEdit(record as Api.User.UserVO)">编辑</AButton>
-              <AButton type="link" size="small" @click="handleChangePassword(record as Api.User.UserVO)">
+              <AButton
+                v-if="hasAuth('system:user:edit')"
+                type="link"
+                size="small"
+                @click="handleEdit(record as Api.User.UserVO)"
+              >
+                编辑
+              </AButton>
+              <AButton
+                v-if="hasAuth('system:user:changePassword')"
+                type="link"
+                size="small"
+                @click="handleChangePassword(record as Api.User.UserVO)"
+              >
                 修改密码
               </AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.User.UserVO)">删除</AButton>
+              <AButton
+                v-if="hasAuth('system:user:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.User.UserVO)"
+              >
+                删除
+              </AButton>
             </ASpace>
           </template>
         </template>

@@ -3,11 +3,14 @@ import { onMounted, reactive, ref } from 'vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchSysLogClean, fetchSysLogDelete, fetchSysLogEnums, fetchSysLogPage } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import OperlogDetailDrawer from './modules/detail-drawer.vue';
 
 defineOptions({
   name: 'LogOperlog'
 });
+
+const { hasAuth } = useAuth();
 
 const searchParams = reactive<{ keyword: string; status: number | undefined }>({
   keyword: '',
@@ -223,7 +226,7 @@ onMounted(async () => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px flex justify-between">
-        <AButton danger @click="handleClean">清空日志</AButton>
+        <AButton v-if="hasAuth('log:operlog:clean')" danger @click="handleClean">清空日志</AButton>
         <AButton @click="getData">刷新</AButton>
       </div>
       <ATable
@@ -253,8 +256,21 @@ onMounted(async () => {
           <template v-else-if="column.key === 'costTime'">{{ (record as Api.SysLog.SysLogVO).costTime }} ms</template>
           <template v-else-if="column.key === 'action'">
             <ASpace>
-              <AButton type="link" size="small" @click="openDetail(record as Api.SysLog.SysLogVO)">详情</AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.SysLog.SysLogVO)">
+              <AButton
+                v-if="hasAuth('log:operlog:list')"
+                type="link"
+                size="small"
+                @click="openDetail(record as Api.SysLog.SysLogVO)"
+              >
+                详情
+              </AButton>
+              <AButton
+                v-if="hasAuth('log:operlog:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.SysLog.SysLogVO)"
+              >
                 删除
               </AButton>
             </ASpace>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
-import { fetchDictItemAdd, fetchDictItemEdit } from '@/service/api';
+import { fetchDictItemAdd, fetchDictItemEdit, fetchDictItemView } from '@/service/api';
 
 defineOptions({
   name: 'DictItemModal'
@@ -74,17 +74,23 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.dictId = props.row.dictId;
-    formModel.dictType = props.row.dictType;
-    formModel.dictLabel = props.row.dictLabel;
-    formModel.dictValue = props.row.dictValue;
-    formModel.cssClass = props.row.cssClass;
-    formModel.displayOrder = props.row.displayOrder;
-    formModel.status = props.row.status;
-    formModel.remark = props.row.remark;
+const viewLoading = ref(false);
+
+async function loadDictItemView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchDictItemView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.dictId = data.dictId;
+    formModel.dictType = data.dictType;
+    formModel.dictLabel = data.dictLabel;
+    formModel.dictValue = data.dictValue;
+    formModel.cssClass = data.cssClass ?? '';
+    formModel.displayOrder = data.displayOrder ?? 0;
+    formModel.status = data.status;
+    formModel.remark = data.remark ?? '';
   }
 }
 
@@ -94,7 +100,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadDictItemView();
       } else if (props.dict) {
         formModel.dictId = props.dict.id;
         formModel.dictType = props.dict.dictType;
@@ -142,31 +148,33 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-      <AFormItem label="字典标签" name="dictLabel" :rules="[{ required: true, message: '请输入字典标签' }]">
-        <AInput v-model:value="formModel.dictLabel" placeholder="如 男 / 女 / 登录" />
-      </AFormItem>
-      <AFormItem label="字典键值" name="dictValue" :rules="[{ required: true, message: '请输入字典键值' }]">
-        <AInput v-model:value="formModel.dictValue" placeholder="如 1 / 0 / login" />
-      </AFormItem>
-      <AFormItem label="样式" name="cssClass">
-        <ASelect
-          v-model:value="formModel.cssClass"
-          :options="cssClassOptions"
-          placeholder="选择标签颜色（可选）"
-          allow-clear
-        />
-      </AFormItem>
-      <AFormItem label="显示顺序" name="displayOrder">
-        <AInputNumber v-model:value="formModel.displayOrder" :min="0" class="w-full" />
-      </AFormItem>
-      <AFormItem label="状态" name="status">
-        <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
+        <AFormItem label="字典标签" name="dictLabel" :rules="[{ required: true, message: '请输入字典标签' }]">
+          <AInput v-model:value="formModel.dictLabel" placeholder="如 男 / 女 / 登录" />
+        </AFormItem>
+        <AFormItem label="字典键值" name="dictValue" :rules="[{ required: true, message: '请输入字典键值' }]">
+          <AInput v-model:value="formModel.dictValue" placeholder="如 1 / 0 / login" />
+        </AFormItem>
+        <AFormItem label="样式" name="cssClass">
+          <ASelect
+            v-model:value="formModel.cssClass"
+            :options="cssClassOptions"
+            placeholder="选择标签颜色（可选）"
+            allow-clear
+          />
+        </AFormItem>
+        <AFormItem label="显示顺序" name="displayOrder">
+          <AInputNumber v-model:value="formModel.displayOrder" :min="0" class="w-full" />
+        </AFormItem>
+        <AFormItem label="状态" name="status">
+          <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

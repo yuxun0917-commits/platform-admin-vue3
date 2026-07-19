@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
-import { fetchDictAdd, fetchDictEdit } from '@/service/api';
+import { fetchDictAdd, fetchDictEdit, fetchDictView } from '@/service/api';
 
 defineOptions({
   name: 'DictModal'
@@ -47,13 +47,19 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.dictName = props.row.dictName;
-    formModel.dictType = props.row.dictType;
-    formModel.status = props.row.status;
-    formModel.remark = props.row.remark;
+const viewLoading = ref(false);
+
+async function loadDictView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchDictView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.dictName = data.dictName;
+    formModel.dictType = data.dictType;
+    formModel.status = data.status;
+    formModel.remark = data.remark ?? '';
   }
 }
 
@@ -63,7 +69,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadDictView();
       }
     }
   }
@@ -108,20 +114,22 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-      <AFormItem label="字典名称" name="dictName" :rules="[{ required: true, message: '请输入字典名称' }]">
-        <AInput v-model:value="formModel.dictName" placeholder="请输入字典名称" />
-      </AFormItem>
-      <AFormItem label="字典类型" name="dictType" :rules="[{ required: true, message: '请输入字典类型' }]">
-        <AInput v-model:value="formModel.dictType" placeholder="如 sys_user_gender" :disabled="type === 'edit'" />
-      </AFormItem>
-      <AFormItem label="状态" name="status">
-        <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
+        <AFormItem label="字典名称" name="dictName" :rules="[{ required: true, message: '请输入字典名称' }]">
+          <AInput v-model:value="formModel.dictName" placeholder="请输入字典名称" />
+        </AFormItem>
+        <AFormItem label="字典类型" name="dictType" :rules="[{ required: true, message: '请输入字典类型' }]">
+          <AInput v-model:value="formModel.dictType" placeholder="如 sys_user_gender" :disabled="type === 'edit'" />
+        </AFormItem>
+        <AFormItem label="状态" name="status">
+          <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

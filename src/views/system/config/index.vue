@@ -3,11 +3,14 @@ import { onMounted, reactive, ref } from 'vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchSysConfigDelete, fetchSysConfigPage } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import SysConfigModal from './modules/config-modal.vue';
 
 defineOptions({
   name: 'SystemSysConfig'
 });
+
+const { hasAuth } = useAuth();
 
 const searchParams = reactive<{ keyword: string; configType: number | undefined }>({
   keyword: '',
@@ -189,7 +192,7 @@ onMounted(() => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px">
-        <AButton type="primary" @click="openAdd">新增参数</AButton>
+        <AButton v-if="hasAuth('system:config:add')" type="primary" @click="openAdd">新增参数</AButton>
       </div>
       <ATable
         :columns="columns"
@@ -212,8 +215,21 @@ onMounted(() => {
           </template>
           <template v-if="column.key === 'action'">
             <ASpace>
-              <AButton type="link" size="small" @click="openEdit(record as Api.SysConfig.SysConfigVO)">编辑</AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.SysConfig.SysConfigVO)">
+              <AButton
+                v-if="hasAuth('system:config:edit')"
+                type="link"
+                size="small"
+                @click="openEdit(record as Api.SysConfig.SysConfigVO)"
+              >
+                编辑
+              </AButton>
+              <AButton
+                v-if="hasAuth('system:config:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.SysConfig.SysConfigVO)"
+              >
                 删除
               </AButton>
             </ASpace>

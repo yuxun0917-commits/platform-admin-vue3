@@ -264,17 +264,25 @@ async function submitSort(parentId: number, ids: number[]) {
 
 // 数据或展开状态变化后，待 DOM 更新重新初始化 Sortable
 watch([tableData, expandedKeys], () => {
-  nextTick(initSortable);
+  if (hasAuth('system:menu:sort')) {
+    nextTick(initSortable);
+  } else {
+    nextTick(destroySortable);
+  }
 });
 
 const columns = computed(() => {
   const cols: any[] = [
-    {
-      title: '',
-      key: 'drag',
-      align: 'center' as const,
-      width: 64
-    },
+    ...(hasAuth('system:menu:sort')
+      ? [
+          {
+            title: '',
+            key: 'drag',
+            align: 'center' as const,
+            width: 64
+          }
+        ]
+      : []),
     {
       title: '菜单名称',
       dataIndex: 'menuName',
@@ -339,13 +347,13 @@ onMounted(() => {
       <div class="mb-16px flex items-center gap-8px">
         <AButton v-if="hasAuth('system:menu:add')" type="primary" @click="handleAdd">新增菜单</AButton>
         <AButton @click="toggleExpandAll">{{ allExpanded ? '全部折叠' : '全部展开' }}</AButton>
-        <span class="pl-12px text-12px text-gray-400">
+        <span v-if="hasAuth('system:menu:sort')" class="pl-12px text-12px text-gray-400">
           拖动时红色虚线框会圈出可放置的
           <b class="text-red-500">同级范围</b>
           ，跨级不可拖
         </span>
       </div>
-      <div ref="tableWrapRef" class="menu-drag-wrap">
+      <div ref="tableWrapRef" class="menu-drag-wrap" :class="{ 'can-drag': hasAuth('system:menu:sort') }">
         <ATable
           :columns="columns"
           :data-source="tableData"
@@ -356,12 +364,13 @@ onMounted(() => {
           size="small"
           :expanded-row-keys="expandedKeys"
           children-column-name="children"
-          :expand-icon-column-index="1"
+          :expand-icon-column-index="hasAuth('system:menu:sort') ? 1 : 0"
           @expand="handleExpand"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'drag'">
               <div
+                v-if="hasAuth('system:menu:sort')"
                 class="drag-handle h-full w-full flex-center cursor-move select-none text-18px text-gray-400"
                 title="拖拽排序（仅限同级）"
               >
@@ -449,11 +458,11 @@ onMounted(() => {
   overflow-y: auto;
   overflow-x: hidden;
 }
-/* 整行可拖拽的视觉提示（交互元素除外） */
-:deep(.ant-table-tbody > tr) {
+/* 整行可拖拽的视觉提示（仅在有排序权限时，交互元素除外） */
+.menu-drag-wrap.can-drag :deep(.ant-table-tbody > tr) {
   cursor: grab;
 }
-:deep(.ant-table-tbody > tr:active) {
+.menu-drag-wrap.can-drag :deep(.ant-table-tbody > tr:active) {
   cursor: grabbing;
 }
 :deep(.ant-table-tbody .ant-btn),

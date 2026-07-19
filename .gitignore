@@ -31,6 +31,3 @@ coverage
 # OS
 .DS_Store
 Thumbs.db
-
-# WorkBuddy local memory / agent data
-.workbuddy

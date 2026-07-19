@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
 import { MdEditor } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
-import { fetchNoticeAdd, fetchNoticeEdit, fetchNoticeEnums } from '@/service/api';
+import { fetchNoticeAdd, fetchNoticeEdit, fetchNoticeEnums, fetchNoticeView } from '@/service/api';
 import { useThemeStore } from '@/store/modules/theme';
 
 defineOptions({
@@ -63,14 +63,20 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.title = props.row.title;
-    formModel.content = props.row.content;
-    formModel.position = props.row.position;
-    formModel.status = props.row.status;
-    formModel.remark = props.row.remark;
+const viewLoading = ref(false);
+
+async function loadNoticeView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchNoticeView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.title = data.title;
+    formModel.content = data.content;
+    formModel.position = data.position;
+    formModel.status = data.status;
+    formModel.remark = data.remark ?? '';
   }
 }
 
@@ -80,7 +86,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadNoticeView();
       }
     }
   }
@@ -129,30 +135,32 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }">
-      <AFormItem label="标题" name="title" :rules="[{ required: true, message: '请输入通知标题' }]">
-        <AInput v-model:value="formModel.title" placeholder="如 系统升级通知" />
-      </AFormItem>
-      <AFormItem label="展示位置" name="position" :rules="[{ required: true, message: '请选择展示位置' }]">
-        <ASelect v-model:value="formModel.position" :options="positionOptions" placeholder="请选择展示位置" />
-      </AFormItem>
-      <AFormItem label="内容" name="content" :rules="[{ required: true, message: '请输入通知内容' }]">
-        <MdEditor
-          v-model="formModel.content"
-          :theme="editorTheme"
-          :preview="true"
-          :toolbars-exclude="['github', 'save']"
-          placeholder="支持 Markdown 语法，左侧编辑、右侧实时预览"
-          style="height: 520px"
-        />
-      </AFormItem>
-      <AFormItem label="状态" name="status">
-        <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="2" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }">
+        <AFormItem label="标题" name="title" :rules="[{ required: true, message: '请输入通知标题' }]">
+          <AInput v-model:value="formModel.title" placeholder="如 系统升级通知" />
+        </AFormItem>
+        <AFormItem label="展示位置" name="position" :rules="[{ required: true, message: '请选择展示位置' }]">
+          <ASelect v-model:value="formModel.position" :options="positionOptions" placeholder="请选择展示位置" />
+        </AFormItem>
+        <AFormItem label="内容" name="content" :rules="[{ required: true, message: '请输入通知内容' }]">
+          <MdEditor
+            v-model="formModel.content"
+            :theme="editorTheme"
+            :preview="true"
+            :toolbars-exclude="['github', 'save']"
+            placeholder="支持 Markdown 语法，左侧编辑、右侧实时预览"
+            style="height: 520px"
+          />
+        </AFormItem>
+        <AFormItem label="状态" name="status">
+          <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="2" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
-import { fetchJobAdd, fetchJobEdit, fetchJobEnums } from '@/service/api';
+import { fetchJobAdd, fetchJobEdit, fetchJobEnums, fetchJobView } from '@/service/api';
 
 defineOptions({
   name: 'SystemJobModal'
@@ -64,17 +64,23 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (props.row) {
-    formModel.id = props.row.id;
-    formModel.jobName = props.row.jobName;
-    formModel.jobGroup = props.row.jobGroup;
-    formModel.invokeTarget = props.row.invokeTarget;
-    formModel.cronExpression = props.row.cronExpression;
-    formModel.misfirePolicy = props.row.misfirePolicy;
-    formModel.concurrent = props.row.concurrent;
-    formModel.status = props.row.status;
-    formModel.remark = props.row.remark;
+const viewLoading = ref(false);
+
+async function loadJobView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchJobView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.jobName = data.jobName;
+    formModel.jobGroup = data.jobGroup;
+    formModel.invokeTarget = data.invokeTarget;
+    formModel.cronExpression = data.cronExpression;
+    formModel.misfirePolicy = data.misfirePolicy;
+    formModel.concurrent = data.concurrent;
+    formModel.status = data.status;
+    formModel.remark = data.remark ?? '';
   }
 }
 
@@ -84,7 +90,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadJobView();
       }
     }
   }
@@ -133,36 +139,38 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }">
-      <AFormItem label="任务名称" name="jobName" :rules="[{ required: true, message: '请输入任务名称' }]">
-        <AInput v-model:value="formModel.jobName" placeholder="请输入任务名称" />
-      </AFormItem>
-      <AFormItem label="任务组名" name="jobGroup">
-        <AInput v-model:value="formModel.jobGroup" placeholder="留空默认 DEFAULT" />
-      </AFormItem>
-      <AFormItem label="调用目标" name="invokeTarget" :rules="[{ required: true, message: '请输入调用目标' }]">
-        <ATextarea v-model:value="formModel.invokeTarget" :rows="2" placeholder="如 ryTask.ryParams('ry')" />
-      </AFormItem>
-      <AFormItem label="cron表达式" name="cronExpression" :rules="[{ required: true, message: '请输入cron表达式' }]">
-        <AInput v-model:value="formModel.cronExpression" placeholder="如 0/10 * * * * ?" />
-      </AFormItem>
-      <AFormItem label="错失策略" name="misfirePolicy" :rules="[{ required: true, message: '请选择错失触发策略' }]">
-        <ASelect
-          v-model:value="formModel.misfirePolicy"
-          :options="misfirePolicyOptions"
-          placeholder="请选择错失触发策略"
-        />
-      </AFormItem>
-      <AFormItem label="是否并发" name="concurrent" :rules="[{ required: true, message: '请选择是否并发' }]">
-        <ASelect v-model:value="formModel.concurrent" :options="concurrentOptions" placeholder="请选择是否并发" />
-      </AFormItem>
-      <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
-        <ASelect v-model:value="formModel.status" :options="jobStatusOptions" placeholder="请选择状态" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="2" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 17 }">
+        <AFormItem label="任务名称" name="jobName" :rules="[{ required: true, message: '请输入任务名称' }]">
+          <AInput v-model:value="formModel.jobName" placeholder="请输入任务名称" />
+        </AFormItem>
+        <AFormItem label="任务组名" name="jobGroup">
+          <AInput v-model:value="formModel.jobGroup" placeholder="留空默认 DEFAULT" />
+        </AFormItem>
+        <AFormItem label="调用目标" name="invokeTarget" :rules="[{ required: true, message: '请输入调用目标' }]">
+          <ATextarea v-model:value="formModel.invokeTarget" :rows="2" placeholder="如 ryTask.ryParams('ry')" />
+        </AFormItem>
+        <AFormItem label="cron表达式" name="cronExpression" :rules="[{ required: true, message: '请输入cron表达式' }]">
+          <AInput v-model:value="formModel.cronExpression" placeholder="如 0/10 * * * * ?" />
+        </AFormItem>
+        <AFormItem label="错失策略" name="misfirePolicy" :rules="[{ required: true, message: '请选择错失触发策略' }]">
+          <ASelect
+            v-model:value="formModel.misfirePolicy"
+            :options="misfirePolicyOptions"
+            placeholder="请选择错失触发策略"
+          />
+        </AFormItem>
+        <AFormItem label="是否并发" name="concurrent" :rules="[{ required: true, message: '请选择是否并发' }]">
+          <ASelect v-model:value="formModel.concurrent" :options="concurrentOptions" placeholder="请选择是否并发" />
+        </AFormItem>
+        <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
+          <ASelect v-model:value="formModel.status" :options="jobStatusOptions" placeholder="请选择状态" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="2" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

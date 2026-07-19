@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import type { FormInstance, SelectProps } from 'ant-design-vue';
-import { fetchDeptAdd, fetchDeptEdit } from '@/service/api';
+import { fetchDeptAdd, fetchDeptEdit, fetchDeptView } from '@/service/api';
 
 defineOptions({
   name: 'DeptModal'
@@ -76,16 +76,23 @@ function resetForm() {
   formRef.value?.resetFields();
 }
 
-function setFormFromRow() {
-  if (!props.row) return;
-  formModel.id = props.row.id;
-  formModel.parentId = props.row.parentId;
-  formModel.deptName = props.row.deptName;
-  formModel.leader = props.row.leader ?? '';
-  formModel.phone = props.row.phone ?? '';
-  formModel.email = props.row.email ?? '';
-  formModel.status = props.row.status;
-  formModel.remark = props.row.remark ?? '';
+const viewLoading = ref(false);
+
+async function loadDeptView() {
+  if (!props.row?.id) return;
+  viewLoading.value = true;
+  const { error, data } = await fetchDeptView(props.row.id);
+  viewLoading.value = false;
+  if (!error && data) {
+    formModel.id = data.id;
+    formModel.parentId = data.parentId;
+    formModel.deptName = data.deptName;
+    formModel.leader = data.leader ?? '';
+    formModel.phone = data.phone ?? '';
+    formModel.email = data.email ?? '';
+    formModel.status = data.status;
+    formModel.remark = data.remark ?? '';
+  }
 }
 
 watch(
@@ -94,7 +101,7 @@ watch(
     if (visible) {
       resetForm();
       if (props.type === 'edit' && props.row) {
-        setFormFromRow();
+        loadDeptView();
       }
     }
   }
@@ -154,35 +161,37 @@ function handleCancel() {
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
-    <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
-      <AFormItem label="上级部门" name="parentId" :rules="[{ required: true, message: '请选择上级部门' }]">
-        <ATreeSelect
-          v-model:value="formModel.parentId"
-          :tree-data="parentTreeData"
-          :tree-default-expand-all="true"
-          placeholder="请选择上级部门"
-          allow-clear
-        />
-      </AFormItem>
-      <AFormItem label="部门名称" name="deptName" :rules="[{ required: true, message: '请输入部门名称' }]">
-        <AInput v-model:value="formModel.deptName" placeholder="请输入部门名称" />
-      </AFormItem>
-      <AFormItem label="负责人" name="leader">
-        <AInput v-model:value="formModel.leader" placeholder="请输入负责人" />
-      </AFormItem>
-      <AFormItem label="联系电话" name="phone">
-        <AInput v-model:value="formModel.phone" placeholder="请输入联系电话" />
-      </AFormItem>
-      <AFormItem label="邮箱" name="email">
-        <AInput v-model:value="formModel.email" placeholder="请输入邮箱" />
-      </AFormItem>
-      <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
-        <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
-      </AFormItem>
-      <AFormItem label="备注" name="remark">
-        <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
-      </AFormItem>
-    </AForm>
+    <ASpin :spinning="viewLoading">
+      <AForm ref="formRef" :model="formModel" :label-col="{ span: 5 }" :wrapper-col="{ span: 18 }">
+        <AFormItem label="上级部门" name="parentId" :rules="[{ required: true, message: '请选择上级部门' }]">
+          <ATreeSelect
+            v-model:value="formModel.parentId"
+            :tree-data="parentTreeData"
+            :tree-default-expand-all="true"
+            placeholder="请选择上级部门"
+            allow-clear
+          />
+        </AFormItem>
+        <AFormItem label="部门名称" name="deptName" :rules="[{ required: true, message: '请输入部门名称' }]">
+          <AInput v-model:value="formModel.deptName" placeholder="请输入部门名称" />
+        </AFormItem>
+        <AFormItem label="负责人" name="leader">
+          <AInput v-model:value="formModel.leader" placeholder="请输入负责人" />
+        </AFormItem>
+        <AFormItem label="联系电话" name="phone">
+          <AInput v-model:value="formModel.phone" placeholder="请输入联系电话" />
+        </AFormItem>
+        <AFormItem label="邮箱" name="email">
+          <AInput v-model:value="formModel.email" placeholder="请输入邮箱" />
+        </AFormItem>
+        <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
+          <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
+        </AFormItem>
+        <AFormItem label="备注" name="remark">
+          <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
+        </AFormItem>
+      </AForm>
+    </ASpin>
   </AModal>
 </template>
 

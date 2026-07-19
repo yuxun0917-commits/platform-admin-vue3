@@ -4,11 +4,14 @@ import { Modal } from 'ant-design-vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import Sortable from 'sortablejs';
 import { fetchPostDelete, fetchPostEnums, fetchPostPage, fetchPostSort } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import PostModal from './modules/post-modal.vue';
 
 defineOptions({
   name: 'SystemPost'
 });
+
+const { hasAuth } = useAuth();
 
 interface SearchParams {
   keyword: string;
@@ -175,7 +178,13 @@ function initSortable() {
 }
 
 // 数据变化后待 DOM 更新重新初始化 Sortable
-watch(tableData, () => nextTick(initSortable));
+watch(tableData, () => {
+  if (hasAuth('system:post:sort')) {
+    nextTick(initSortable);
+  } else {
+    nextTick(destroySortable);
+  }
+});
 
 async function submitSort(ids: number[]) {
   const { error } = await fetchPostSort({
@@ -193,12 +202,16 @@ async function submitSort(ids: number[]) {
 
 const columns = computed(() => {
   const cols: any[] = [
-    {
-      title: '',
-      key: 'drag',
-      align: 'center' as const,
-      width: 64
-    },
+    ...(hasAuth('system:post:sort')
+      ? [
+          {
+            title: '',
+            key: 'drag',
+            align: 'center' as const,
+            width: 64
+          }
+        ]
+      : []),
     {
       title: '岗位编码',
       dataIndex: 'postCode',
@@ -231,6 +244,13 @@ const columns = computed(() => {
       title: '创建时间',
       dataIndex: 'createTime',
       key: 'createTime',
+      align: 'center' as const,
+      width: 170
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
       align: 'center' as const,
       width: 170
     },
@@ -281,8 +301,10 @@ onMounted(() => {
 
     <ACard :bordered="false" class="flex-1-hidden card-wrapper">
       <div class="mb-16px flex items-center gap-12px">
-        <AButton type="primary" @click="handleAdd">新增岗位</AButton>
-        <span class="text-12px text-gray-400">拖动整行（或左侧手柄）可调整排序，红色虚线框内为可拖拽范围</span>
+        <AButton v-if="hasAuth('system:post:add')" type="primary" @click="handleAdd">新增岗位</AButton>
+        <span v-if="hasAuth('system:post:sort')" class="text-12px text-gray-400">
+          拖动整行（或左侧手柄）可调整排序，红色虚线框内为可拖拽范围
+        </span>
       </div>
       <div ref="tableWrapRef" class="post-drag-wrap">
         <ATable
@@ -292,12 +314,16 @@ onMounted(() => {
           :pagination="pagination"
           row-key="id"
           size="small"
-          :scroll="{ x: 944 }"
+          :scroll="{ x: 1114 }"
           @change="handleTableChange"
         >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'drag'">
-              <div class="h-24px flex-center cursor-grab select-none text-18px text-gray-400" title="拖拽排序">
+              <div
+                v-if="hasAuth('system:post:sort')"
+                class="h-24px flex-center cursor-grab select-none text-18px text-gray-400"
+                title="拖拽排序"
+              >
                 <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" style="pointer-events: none">
                   <circle cx="7" cy="5" r="1.6" fill="currentColor" />
                   <circle cx="13" cy="5" r="1.6" fill="currentColor" />
@@ -309,14 +335,29 @@ onMounted(() => {
               </div>
             </template>
             <template v-if="column.key === 'status'">
-              <ATag :color="record.status === 1 ? 'success' : 'default'">
+              <ATag :color="record.status === 1 ? 'success' : 'error'">
                 {{ record.status === 1 ? '正常' : '禁用' }}
               </ATag>
             </template>
             <template v-if="column.key === 'action'">
               <ASpace>
-                <AButton type="link" size="small" @click="handleEdit(record as Api.Post.PostVO)">编辑</AButton>
-                <AButton type="link" size="small" danger @click="handleDelete(record as Api.Post.PostVO)">删除</AButton>
+                <AButton
+                  v-if="hasAuth('system:post:edit')"
+                  type="link"
+                  size="small"
+                  @click="handleEdit(record as Api.Post.PostVO)"
+                >
+                  编辑
+                </AButton>
+                <AButton
+                  v-if="hasAuth('system:post:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.Post.PostVO)"
+                >
+                  删除
+                </AButton>
               </ASpace>
             </template>
           </template>

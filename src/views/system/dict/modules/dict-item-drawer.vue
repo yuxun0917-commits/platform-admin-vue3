@@ -3,11 +3,14 @@ import { computed, reactive, ref, watch } from 'vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchDictItemDelete, fetchDictItemPage } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import DictItemModal from './dict-item-modal.vue';
 
 defineOptions({
   name: 'DictItemDrawer'
 });
+
+const { hasAuth } = useAuth();
 
 interface Props {
   visible: boolean;
@@ -161,7 +164,7 @@ watch(
     </AForm>
 
     <div class="mb-12px mt-12px">
-      <AButton type="primary" @click="openAdd">新增字典项</AButton>
+      <AButton v-if="hasAuth('system:dict:item:add')" type="primary" @click="openAdd">新增字典项</AButton>
     </div>
 
     <ATable
@@ -185,14 +188,29 @@ watch(
           <span v-else class="text-gray-300">-</span>
         </template>
         <template v-if="column.key === 'status'">
-          <ATag :color="(record as Api.Dict.DictItemVO).status === 1 ? 'success' : 'default'">
+          <ATag :color="(record as Api.Dict.DictItemVO).status === 1 ? 'success' : 'error'">
             {{ (record as Api.Dict.DictItemVO).status === 1 ? '正常' : '禁用' }}
           </ATag>
         </template>
         <template v-if="column.key === 'action'">
           <ASpace>
-            <AButton type="link" size="small" @click="openEdit(record as Api.Dict.DictItemVO)">编辑</AButton>
-            <AButton type="link" size="small" danger @click="handleDelete(record as Api.Dict.DictItemVO)">删除</AButton>
+            <AButton
+              v-if="hasAuth('system:dict:item:edit')"
+              type="link"
+              size="small"
+              @click="openEdit(record as Api.Dict.DictItemVO)"
+            >
+              编辑
+            </AButton>
+            <AButton
+              v-if="hasAuth('system:dict:item:delete')"
+              type="link"
+              size="small"
+              danger
+              @click="handleDelete(record as Api.Dict.DictItemVO)"
+            >
+              删除
+            </AButton>
           </ASpace>
         </template>
       </template>
