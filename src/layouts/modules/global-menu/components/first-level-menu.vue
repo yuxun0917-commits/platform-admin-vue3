@@ -48,6 +48,7 @@ const selectedBgColor = computed(() => {
 });
 
 function handleClickMixMenu(menu: App.Global.Menu) {
+  if (menu.disabled) return;
   emit('select', menu);
 }
 

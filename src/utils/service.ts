@@ -5,7 +5,7 @@ import json5 from 'json5';
  *
  * @param env The current env
  */
-export function createServiceConfig(env: Env.ImportMeta) {
+export function createServiceConfig(env: ImportMetaEnv) {
   const { VITE_SERVICE_BASE_URL, VITE_OTHER_SERVICE_BASE_URL } = env;
 
   let other = {} as Record<App.Service.OtherBaseURLKey, string>;
@@ -46,7 +46,7 @@ export function createServiceConfig(env: Env.ImportMeta) {
  * @param env - the current env
  * @param isProxy - if use proxy
  */
-export function getServiceBaseURL(env: Env.ImportMeta, isProxy: boolean) {
+export function getServiceBaseURL(env: ImportMetaEnv, isProxy: boolean) {
   const { baseURL, other } = createServiceConfig(env);
 
   const otherBaseURL = {} as Record<App.Service.OtherBaseURLKey, string>;

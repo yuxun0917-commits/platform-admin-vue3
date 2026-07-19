@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import type { FormInstance, SelectProps } from 'ant-design-vue';
+import type { FormInstance, SelectProps, UploadProps } from 'ant-design-vue';
+import { AttachmentBizType } from '@/constants/attachment';
 import {
+  fetchAttachmentView,
   fetchDeptSelectList,
   fetchPostSelectList,
   fetchRoleSelectList,
@@ -9,6 +11,7 @@ import {
   fetchUserEdit,
   fetchUserView
 } from '@/service/api';
+import { uploadFileAuto } from '@/utils/upload/chunk-upload';
 
 defineOptions({
   name: 'UserModal'
@@ -42,8 +45,18 @@ const formModel = reactive<Partial<Api.User.UserSaveVO & Api.User.UserEditVO>>({
   deptId: undefined,
   rIds: [],
   pIds: [],
-  remark: ''
+  remark: '',
+  avatarId: undefined
 });
+
+/** 头像预览地址（上传后回填附件 fileUrl；编辑时通过 avatarId 反查） */
+const previewUrl = ref('');
+/** 头像上传中 */
+const avatarUploading = ref(false);
+/** 头像大小上限 2MB */
+const AVATAR_MAX_SIZE = 2 * 1024 * 1024;
+/** 头像仅允许图片类型 */
+const AVATAR_ACCEPT = /^image\//;
 
 const deptOptions = ref<Api.Dept.DeptSelectVO[]>([]);
 const roleOptions = ref<Api.Role.RoleSelectVO[]>([]);
@@ -105,6 +118,8 @@ function resetForm() {
   formModel.rIds = [];
   formModel.pIds = [];
   formModel.remark = '';
+  formModel.avatarId = undefined;
+  previewUrl.value = '';
   formRef.value?.resetFields();
 }
 
@@ -120,6 +135,43 @@ function setFormFromData(data: Api.User.UserVO) {
   formModel.rIds = data.rIds ?? [];
   formModel.pIds = data.pIds ?? [];
   formModel.remark = data.remark ?? '';
+  formModel.avatarId = data.avatarId;
+}
+
+/**
+ * 头像上传：校验仅图片类型且 ≤2MB 后调统一上传（bizType=1 头像），回填 avatarId 与预览 URL。
+ * 返回 false 阻止 antd 默认自动上传（上传由本函数自行触发）。
+ */
+const handleAvatarBeforeUpload: UploadProps['beforeUpload'] = async file => {
+  if (!AVATAR_ACCEPT.test(file.type)) {
+    window.$message?.warning('头像仅支持图片格式');
+    return false;
+  }
+  if (file.size > AVATAR_MAX_SIZE) {
+    window.$message?.warning('头像图片不能超过 2MB');
+    return false;
+  }
+
+  avatarUploading.value = true;
+  try {
+    const res = await uploadFileAuto(file, {
+      bizType: AttachmentBizType.Avatar,
+      bizId: props.row?.id ? String(props.row.id) : undefined
+    });
+    formModel.avatarId = String(res.id);
+    previewUrl.value = res.previewUrl || res.fileUrl;
+    window.$message?.success('头像上传成功');
+  } catch (e) {
+    window.$message?.error((e as Error).message || '头像上传失败');
+  } finally {
+    avatarUploading.value = false;
+  }
+  return false;
+};
+
+function handleRemoveAvatar() {
+  formModel.avatarId = undefined;
+  previewUrl.value = '';
 }
 
 const detailLoading = ref(false);
@@ -138,6 +190,11 @@ watch(
         } else if (props.row) {
           // 详情拉取失败时降级使用表格行数据
           setFormFromData(props.row);
+        }
+        // 通过 avatarId 反查附件，回填头像预览 URL
+        if (formModel.avatarId) {
+          const { data: att } = await fetchAttachmentView(formModel.avatarId);
+          if (att) previewUrl.value = att.previewUrl || att.fileUrl;
         }
       }
     }
@@ -263,6 +320,20 @@ const genderOptions: SelectProps['options'] = [
               </ASelectOption>
             </ASelect>
           </AFormItem>
+          <AFormItem label="头像" name="avatarId" :rules="[{ required: true, message: '请上传头像' }]">
+            <div>
+              <AUpload :before-upload="handleAvatarBeforeUpload" :show-upload-list="false" accept="image/*">
+                <div class="avatar-add-box">
+                  <img v-if="previewUrl" :src="previewUrl" alt="头像" class="avatar-add-img" />
+                  <SvgIcon v-else icon="ph:plus" class="avatar-add-icon text-24px" />
+                  <div v-if="previewUrl" class="avatar-remove" @click.stop="handleRemoveAvatar">
+                    <SvgIcon icon="ph:x" class="text-12px" />
+                  </div>
+                </div>
+              </AUpload>
+              <p class="avatar-hint">仅限图片，不超过 2MB</p>
+            </div>
+          </AFormItem>
           <AFormItem label="备注" name="remark" class="form-item-full">
             <ATextarea v-model:value="formModel.remark" :rows="3" placeholder="请输入备注" />
           </AFormItem>
@@ -277,6 +348,7 @@ const genderOptions: SelectProps['options'] = [
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   column-gap: 16px;
+  padding-top: 16px;
 }
 
 .form-item-full {
@@ -285,5 +357,58 @@ const genderOptions: SelectProps['options'] = [
 
 .form-item-full :deep(.ant-form-item-label) {
   flex: 0 0 calc(5 / 48 * 100%) !important;
+}
+
+.avatar-add-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  background: transparent;
+  border: 1px dashed var(--ant-color-border, #8c8c8c);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.avatar-add-box:hover {
+  border-color: var(--ant-color-primary, #1677ff);
+}
+
+.avatar-add-icon {
+  color: var(--ant-color-text-tertiary, #8c8c8c);
+  font-size: 24px;
+}
+
+.avatar-add-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.avatar-hint {
+  margin: 4px 0 0;
+  color: var(--ant-color-text-tertiary, #999);
+  font-size: 12px;
+  line-height: 1.2;
 }
 </style>

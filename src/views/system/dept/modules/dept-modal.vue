@@ -35,7 +35,6 @@ const formModel = reactive<Partial<Api.Dept.DeptSaveVO & Api.Dept.DeptEditVO>>({
   leader: '',
   phone: '',
   email: '',
-  displayOrder: 1,
   status: 1,
   remark: ''
 });
@@ -72,7 +71,6 @@ function resetForm() {
   formModel.leader = '';
   formModel.phone = '';
   formModel.email = '';
-  formModel.displayOrder = 1;
   formModel.status = 1;
   formModel.remark = '';
   formRef.value?.resetFields();
@@ -86,7 +84,6 @@ function setFormFromRow() {
   formModel.leader = props.row.leader ?? '';
   formModel.phone = props.row.phone ?? '';
   formModel.email = props.row.email ?? '';
-  formModel.displayOrder = props.row.displayOrder ?? 1;
   formModel.status = props.row.status;
   formModel.remark = props.row.remark ?? '';
 }
@@ -110,7 +107,6 @@ function buildDeptPayload() {
     leader: (formModel.leader ?? '').trim() || undefined,
     phone: (formModel.phone ?? '').trim() || undefined,
     email: (formModel.email ?? '').trim() || undefined,
-    displayOrder: formModel.displayOrder ?? 1,
     status: (formModel.status as Api.Dept.Status) ?? 1,
     remark: (formModel.remark ?? '').trim() || undefined
   };
@@ -179,9 +175,6 @@ function handleCancel() {
       </AFormItem>
       <AFormItem label="邮箱" name="email">
         <AInput v-model:value="formModel.email" placeholder="请输入邮箱" />
-      </AFormItem>
-      <AFormItem label="显示排序" name="displayOrder" :rules="[{ required: true, message: '请输入显示排序' }]">
-        <AInputNumber v-model:value="formModel.displayOrder" :min="0" class="w-full" />
       </AFormItem>
       <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
         <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />

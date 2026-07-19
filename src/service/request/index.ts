@@ -10,6 +10,12 @@ import type { RequestInstanceState } from './type';
 const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
 const { baseURL, otherBaseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
+/** 判断后端业务码是否属于「需要二次认证」（可识别状态，非错误，不应触发登出或错误提示） */
+function isSecondFactorCode(code: string): boolean {
+  const codes = import.meta.env.VITE_SERVICE_SECOND_FACTOR_CODES?.split(',').filter(Boolean) || [];
+  return codes.includes(code);
+}
+
 export const request = createFlatRequest<App.Service.Response, RequestInstanceState>(
   {
     baseURL,
@@ -77,6 +83,13 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         });
 
         return null;
+      }
+
+      // when the backend response code is in `secondFactorCodes`, it means the current operation needs a
+      // second-factor (password) verification. Treat it as a recognizable state (NOT an error): return the
+      // response so the caller can branch on `response.data.code`, and skip logout / error toast.
+      if (isSecondFactorCode(responseCode)) {
+        return response;
       }
 
       // when the backend response code is in `expiredTokenCodes`, it means the token is expired, and refresh token

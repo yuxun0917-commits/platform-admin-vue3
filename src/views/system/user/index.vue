@@ -2,9 +2,16 @@
 import { onMounted, reactive, ref } from 'vue';
 import { Modal } from 'ant-design-vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
-import { fetchUserDelete, fetchUserEditStatus, fetchUserEnums, fetchUserPage } from '@/service/api';
+import {
+  fetchIsNeedSecondFactorVerify,
+  fetchUserDelete,
+  fetchUserEditStatus,
+  fetchUserEnums,
+  fetchUserPage
+} from '@/service/api';
 import UserModal from './modules/user-modal.vue';
 import PasswordModal from './modules/password-modal.vue';
+import SecondFactorModal from './modules/second-factor-modal.vue';
 
 defineOptions({
   name: 'SystemUser'
@@ -124,9 +131,42 @@ const passwordModalState = reactive({
   userId: null as number | null
 });
 
+/** 二次认证弹窗可见性 */
+const secondFactorVisible = ref(false);
+/** 待修改密码的用户 ID（二次认证通过后使用） */
+const pendingUserId = ref<number | null>(null);
+
 function handleChangePassword(row: Api.User.UserVO) {
-  passwordModalState.userId = row.id;
+  pendingUserId.value = row.id;
+  openPasswordModalIfNoSecondFactor(row.id);
+}
+
+/** 打开修改密码弹窗 */
+function openPasswordModal(userId: number) {
+  passwordModalState.userId = userId;
   passwordModalState.visible = true;
+}
+
+/** 先判断是否需二次认证；200 直接打开，10009 弹出密码认证窗口，其余提示 */
+async function openPasswordModalIfNoSecondFactor(userId: number) {
+  const { response, error } = await fetchIsNeedSecondFactorVerify();
+  const code = response?.data?.code;
+
+  if (code === 200) {
+    openPasswordModal(userId);
+  } else if (code === 10009) {
+    // 需要二次认证：弹出当前用户密码校验窗口
+    secondFactorVisible.value = true;
+  } else {
+    window.$message?.error(error ? '校验失败，请稍后重试' : '操作失败');
+  }
+}
+
+/** 二次认证通过后再打开修改密码弹窗 */
+function handleSecondFactorVerified() {
+  if (pendingUserId.value !== null) {
+    openPasswordModal(pendingUserId.value);
+  }
 }
 
 const columns = [
@@ -135,6 +175,12 @@ const columns = [
     key: 'index',
     align: 'center' as const,
     width: 70
+  },
+  {
+    title: '头像',
+    key: 'avatar',
+    align: 'center' as const,
+    width: 100
   },
   {
     title: '用户名',
@@ -189,6 +235,13 @@ const columns = [
     title: '创建时间',
     dataIndex: 'createTime',
     key: 'createTime',
+    align: 'center' as const,
+    width: 170
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updateTime',
+    key: 'updateTime',
     align: 'center' as const,
     width: 170
   },
@@ -248,12 +301,21 @@ onMounted(() => {
         :pagination="pagination"
         row-key="id"
         size="small"
-        :scroll="{ x: 1250 }"
+        :scroll="{ x: 1520 }"
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record, index }">
           <template v-if="column.key === 'index'">
             {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
+          <template v-if="column.key === 'avatar'">
+            <img
+              v-if="(record as Api.User.UserVO).avatarPreviewUrl"
+              :src="(record as Api.User.UserVO).avatarPreviewUrl"
+              alt="头像"
+              class="mx-auto block size-48px rd-1/2 object-cover"
+            />
+            <SvgIcon v-else icon="ph:user-circle" class="mx-auto block size-48px text-40px" />
           </template>
           <template v-if="column.key === 'gender'">
             {{ genderMap[record.gender ?? 0] }}
@@ -289,6 +351,8 @@ onMounted(() => {
       :user-id="passwordModalState.userId"
       @submitted="getData"
     />
+
+    <SecondFactorModal v-model:visible="secondFactorVisible" @verified="handleSecondFactorVerified" />
   </div>
 </template>
 

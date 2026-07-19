@@ -240,6 +240,13 @@ const columns = computed(() => {
       width: 170
     },
     {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
+      align: 'center' as const,
+      width: 170
+    },
+    {
       title: '操作',
       key: 'action',
       align: 'center' as const,
@@ -292,6 +299,7 @@ onMounted(() => {
           :pagination="pagination"
           row-key="id"
           size="small"
+          :scroll="{ x: 1200 }"
           @change="handleTableChange"
         >
           <template #bodyCell="{ column, record }">
@@ -330,7 +338,7 @@ onMounted(() => {
                   size="small"
                   @click="handleAssignMenus(record as Api.Role.RoleVO)"
                 >
-                  分配菜单
+                  分配权限
                 </AButton>
                 <AButton
                   v-if="hasAuth('system:role:delete')"

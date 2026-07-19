@@ -153,9 +153,12 @@ function buildRoute(menu: Api.Auth.MenuTree, parentPath: string): RouteRecordRaw
 }
 
 /** Build global sidebar menu from a backend menu node (recursive) */
-function buildGlobalMenu(menu: Api.Auth.MenuTree, parentPath: string): App.Global.Menu | null {
+function buildGlobalMenu(menu: Api.Auth.MenuTree, parentPath: string, parentDisabled = false): App.Global.Menu | null {
   if (menu.menuType === 3) return null;
   if (menu.isHidden === 1) return null;
+
+  // 菜单状态为 0（禁用）或父级已禁用时，该节点及整条子树一并禁用（置灰、不可跳转）。
+  const disabled = parentDisabled || menu.status === 0;
 
   const fullPath = normalizePath(parentPath, menu.path);
   const name = routeNameFromPath(fullPath);
@@ -168,12 +171,13 @@ function buildGlobalMenu(menu: Api.Auth.MenuTree, parentPath: string): App.Globa
     routeKey: name as unknown as RouteKey,
     routePath: fullPath as unknown as RoutePath,
     icon: SvgIconVNode({ icon: menu.icon || import.meta.env.VITE_MENU_ICON, fontSize: 20 }),
-    title: menu.menuName
+    title: menu.menuName,
+    disabled
   };
 
   if (menu.children?.length) {
     const childMenus = menu.children
-      .map(child => buildGlobalMenu(child, fullPath))
+      .map(child => buildGlobalMenu(child, fullPath, disabled))
       .filter((item): item is App.Global.Menu => item !== null);
 
     if (childMenus.length) menuItem.children = childMenus;

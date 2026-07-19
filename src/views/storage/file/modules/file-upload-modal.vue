@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import type { UploadProps } from 'ant-design-vue';
+import { attachmentBizTypeOptions } from '@/constants/attachment';
 import { CHUNK_UPLOAD_THRESHOLD, uploadFileAuto } from '@/utils/upload/chunk-upload';
 
 defineOptions({
@@ -22,7 +23,7 @@ const title = '上传文件';
 const loading = ref(false);
 
 const fileList = ref<UploadProps['fileList']>([]);
-const bizType = ref('');
+const bizType = ref<Api.Attachment.AttachmentBizType>();
 const progressText = ref('');
 
 /** 已选文件中是否有超过阈值、将走分片上传的文件 */
@@ -38,7 +39,7 @@ const beforeUpload: UploadProps['beforeUpload'] = () => false;
 
 function resetForm() {
   fileList.value = [];
-  bizType.value = '';
+  bizType.value = undefined;
 }
 
 watch(
@@ -118,7 +119,13 @@ function handleCancel() {
       </div>
       <div v-if="progressText" class="upload-progress">{{ progressText }}</div>
       <AFormItem label="业务类型">
-        <AInput v-model:value="bizType" placeholder="可选，如 avatar/article" :maxlength="100" />
+        <ASelect
+          v-model:value="bizType"
+          placeholder="可选，请选择业务类型"
+          allow-clear
+          class="w-full"
+          :options="attachmentBizTypeOptions"
+        />
       </AFormItem>
     </AForm>
   </AModal>

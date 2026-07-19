@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { Modal } from 'ant-design-vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
+import { attachmentBizTypeOptions, getAttachmentBizTypeText } from '@/constants/attachment';
 import {
   fetchAttachmentBlob,
   fetchAttachmentDelete,
@@ -18,13 +19,13 @@ defineOptions({
 interface SearchParams {
   keyword: string;
   configId: number | undefined;
-  bizType: string;
+  bizType: Api.Attachment.AttachmentBizType | undefined;
 }
 
 const searchParams = reactive<SearchParams>({
   keyword: '',
   configId: undefined,
-  bizType: ''
+  bizType: undefined
 });
 
 const tableData = ref<Api.Attachment.AttachmentVO[]>([]);
@@ -74,7 +75,7 @@ function handleSearch() {
 function handleReset() {
   searchParams.keyword = '';
   searchParams.configId = undefined;
-  searchParams.bizType = '';
+  searchParams.bizType = undefined;
   pagination.current = 1;
   getData();
 }
@@ -105,7 +106,6 @@ function formatSize(bytes: number): string {
   return `${(mb / 1024).toFixed(2)} GB`;
 }
 
-const previewLoading = ref(false);
 const previewState = reactive({
   visible: false,
   url: '',
@@ -120,22 +120,18 @@ function revokePreviewUrl() {
   }
 }
 
-/** 内联预览：走后端 /attachment/preview 取流（图片/PDF 浏览器内联） */
-async function handlePreview(row: Api.Attachment.AttachmentVO) {
-  previewLoading.value = true;
-  try {
-    const { blob, fileName, contentType } = await fetchAttachmentBlob(row.id, 'preview');
-    revokePreviewUrl();
-    previewState.url = URL.createObjectURL(blob);
-    previewState.name = row.fileName;
-    previewState.downloadName = fileName;
-    previewState.contentType = contentType;
-    previewState.visible = true;
-  } catch (e) {
-    window.$message?.error((e as Error).message || '预览失败');
-  } finally {
-    previewLoading.value = false;
+/** 内联预览：直接使用后端返回的 previewUrl（图片/PDF 浏览器内联） */
+function handlePreview(row: Api.Attachment.AttachmentVO) {
+  if (!row.previewUrl) {
+    window.$message?.warning('该文件暂无预览地址');
+    return;
   }
+  revokePreviewUrl();
+  previewState.url = row.previewUrl;
+  previewState.name = row.fileName;
+  previewState.downloadName = row.fileName;
+  previewState.contentType = row.contentType;
+  previewState.visible = true;
 }
 
 /** 强制下载：走后端 /attachment/download 取流；文件名优先用列表行的原始 fileName */
@@ -269,11 +265,12 @@ onBeforeUnmount(revokePreviewUrl);
           />
         </AFormItem>
         <AFormItem label="业务类型">
-          <AInput
+          <ASelect
             v-model:value="searchParams.bizType"
-            placeholder="如 avatar/article"
+            placeholder="请选择业务类型"
             allow-clear
-            @press-enter="handleSearch"
+            class="w-160px"
+            :options="attachmentBizTypeOptions"
           />
         </AFormItem>
         <AFormItem>
@@ -316,7 +313,7 @@ onBeforeUnmount(revokePreviewUrl);
             {{ formatSize((record as Api.Attachment.AttachmentVO).fileSize) }}
           </template>
           <template v-if="column.key === 'bizType'">
-            {{ (record as Api.Attachment.AttachmentVO).bizType || '—' }}
+            {{ getAttachmentBizTypeText((record as Api.Attachment.AttachmentVO).bizType) }}
           </template>
           <template v-if="column.key === 'action'">
             <ASpace>
@@ -324,7 +321,6 @@ onBeforeUnmount(revokePreviewUrl);
                 v-if="isImage(record as Api.Attachment.AttachmentVO)"
                 type="link"
                 size="small"
-                :loading="previewLoading"
                 @click="handlePreview(record as Api.Attachment.AttachmentVO)"
               >
                 预览

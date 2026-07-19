@@ -18,7 +18,7 @@ export const DEFAULT_CHUNK_CONCURRENCY = 3;
 export const DEFAULT_CHUNK_RETRY = 3;
 
 export interface UploadAutoOptions {
-  bizType?: string;
+  bizType?: Api.Attachment.AttachmentBizType;
   bizId?: string;
   /** 进度回调，percent 0-100 */
   onProgress?: (percent: number) => void;

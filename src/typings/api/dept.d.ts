@@ -50,8 +50,6 @@ declare namespace Api.Dept {
     phone?: string;
     /** 邮箱 */
     email?: string;
-    /** 排序 */
-    displayOrder: number;
     /** 状态（0禁用 1正常） */
     status: Api.Common.EnableStatus;
     /** 备注 */
@@ -72,8 +70,6 @@ declare namespace Api.Dept {
     phone?: string;
     /** 邮箱 */
     email?: string;
-    /** 排序 */
-    displayOrder: number;
     /** 状态（0禁用 1正常） */
     status: Api.Common.EnableStatus;
     /** 备注 */

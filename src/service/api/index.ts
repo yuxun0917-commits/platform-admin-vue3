@@ -11,6 +11,7 @@ export * from './post';
 export * from './sysConfig';
 export * from './role';
 export * from './route';
+export * from './second-factor';
 export * from './sysLog';
 export * from './sysLoginLog';
 export * from './storage-config';

@@ -10,8 +10,8 @@ export function fetchAttachmentPage(params?: Api.Attachment.AttachmentPageParams
   });
 }
 
-/** GET /attachment/view - 附件详情 */
-export function fetchAttachmentView(id: number) {
+/** GET /attachment/view - 附件详情（id 支持字符串以兼容 bigint 精度） */
+export function fetchAttachmentView(id: number | string) {
   return request<Api.Attachment.AttachmentVO>({
     url: '/attachment/view',
     method: 'get',
@@ -29,7 +29,7 @@ export function fetchAttachmentView(id: number) {
 export function fetchAttachmentUpload(params: Api.Attachment.AttachmentUploadParams) {
   const formData = new FormData();
   formData.append('file', params.file);
-  if (params.bizType) formData.append('bizType', params.bizType);
+  if (params.bizType) formData.append('bizType', String(params.bizType));
   if (params.bizId) formData.append('bizId', params.bizId);
 
   return request<Api.Attachment.AttachmentVO>({

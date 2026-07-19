@@ -4,12 +4,12 @@ import type { MenuInfo } from 'ant-design-vue/es/menu/src/interface';
 import type { RouteKey } from '@elegant-router/types';
 import { SimpleScrollbar } from '@sa/materials';
 import { useBoolean } from '@sa/hooks';
+import { GLOBAL_SIDER_MENU_ID } from '@/constants/app';
 import { useAppStore } from '@/store/modules/app';
 import { useThemeStore } from '@/store/modules/theme';
 import { useRouteStore } from '@/store/modules/route';
 import { useRouterPush } from '@/hooks/common/router';
 import { $t } from '@/locales';
-import { GLOBAL_SIDER_MENU_ID } from '@/constants/app';
 import { useMenu, useMixMenuContext } from '../../../context';
 import FirstLevelMenu from '../components/first-level-menu.vue';
 import GlobalLogo from '../../global-logo/index.vue';
@@ -42,6 +42,8 @@ const hasChildMenus = computed(() => childLevelMenus.value.length > 0);
 const showDrawer = computed(() => hasChildMenus.value && (drawerVisible.value || appStore.mixSiderFixed));
 
 function handleSelectMixMenu(menu: App.Global.Menu) {
+  if (menu.disabled) return;
+
   setActiveFirstLevelMenuKey(menu.key);
 
   if (menu.children?.length) {

@@ -17,8 +17,10 @@ declare namespace Api.User {
     username: string;
     /** 用户昵称 */
     nickname: string;
-    /** 头像URL */
-    avatar?: string;
+    /** 头像附件ID（关联 sys_attachment.id，bigint 用字符串避免精度丢失） */
+    avatarId?: string;
+    /** 头像预览地址（后端直出，列表直接渲染，无需再反查附件） */
+    avatarPreviewUrl?: string;
     /** 性别（0未知 1男 2女） */
     gender?: Gender;
     /** 出生日期（yyyy-MM-dd） */
@@ -47,6 +49,8 @@ declare namespace Api.User {
     loginDate?: string;
     /** 创建时间 */
     createTime?: string;
+    /** 更新时间 */
+    updateTime?: string;
   }
 
   /**
@@ -59,8 +63,8 @@ declare namespace Api.User {
     username: string;
     /** 用户昵称 */
     nickname: string;
-    /** 头像URL */
-    avatar?: string;
+    /** 头像附件ID（关联 sys_attachment.id，bigint 用字符串避免精度丢失） */
+    avatarId?: string;
     /** 性别（0未知 1男 2女） */
     gender?: Gender;
     /** 出生日期（yyyy-MM-dd） */
@@ -89,8 +93,8 @@ declare namespace Api.User {
     id: number;
     /** 用户昵称 */
     nickname?: string;
-    /** 头像URL */
-    avatar?: string;
+    /** 头像附件ID（关联 sys_attachment.id，bigint 用字符串避免精度丢失） */
+    avatarId?: string;
     /** 性别（0未知 1男 2女） */
     gender?: Gender;
     /** 出生日期（yyyy-MM-dd） */

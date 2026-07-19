@@ -132,6 +132,8 @@ declare namespace Api {
       isExternal: number;
       /** display order */
       displayOrder?: number;
+      /** 菜单状态：0 禁用，1 正常（启用），对应 EnableStatus */
+      status?: number;
       /** children menu nodes */
       children?: MenuTree[];
     }

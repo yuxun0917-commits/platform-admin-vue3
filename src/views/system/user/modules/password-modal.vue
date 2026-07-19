@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import type { FormInstance } from 'ant-design-vue';
 import { fetchUserChangePassword } from '@/service/api';
+import { encryptByRsa } from '@/utils/crypto/rsa';
 
 defineOptions({
   name: 'PasswordModal'
@@ -64,11 +65,24 @@ async function handleSubmit() {
   }
 
   loading.value = true;
+
+  const [oldEnc, newEnc, confirmEnc] = await Promise.all([
+    encryptByRsa(formModel.oldPassword!),
+    encryptByRsa(formModel.newPassword!),
+    encryptByRsa(formModel.confirmPassword!)
+  ]);
+
+  if (oldEnc === false || newEnc === false || confirmEnc === false) {
+    window.$message?.error('密码加密失败，请重试');
+    loading.value = false;
+    return;
+  }
+
   const { error } = await fetchUserChangePassword({
     id: props.userId,
-    oldPassword: formModel.oldPassword!,
-    newPassword: formModel.newPassword!,
-    confirmPassword: formModel.confirmPassword!
+    oldPassword: oldEnc,
+    newPassword: newEnc,
+    confirmPassword: confirmEnc
   });
 
   if (!error) {

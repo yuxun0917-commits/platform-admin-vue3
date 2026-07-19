@@ -200,6 +200,8 @@ declare namespace App {
       icon?: () => VNode;
       /** The tooltip title */
       title?: string;
+      /** Whether the menu is disabled (backend menu status === 0) */
+      disabled?: boolean;
       /** The menu children */
       children?: Menu[];
     };

@@ -28,6 +28,8 @@ function handleClickMenu(menuInfo: MenuInfo) {
 }
 
 function handleSelectMixMenu(menu: App.Global.Menu) {
+  if (menu.disabled) return;
+
   setActiveFirstLevelMenuKey(menu.key);
 
   if (!menu.children?.length) {
