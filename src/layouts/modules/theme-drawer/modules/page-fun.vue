@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { $t } from '@/locales';
-import { useThemeStore } from '@/store/modules/theme';
 import {
   resetCacheStrategyOptions,
   themePageAnimationModeOptions,
   themeScrollModeOptions,
   themeTabModeOptions
 } from '@/constants/app';
+import { useThemeStore } from '@/store/modules/theme';
+import { $t } from '@/locales';
 import SettingItem from '../components/setting-item.vue';
 
 defineOptions({
@@ -113,7 +113,7 @@ const isWrapperScrollMode = computed(() => themeStore.layout.scrollMode === 'wra
       <ASwitch v-model:checked="themeStore.watermark.visible" />
     </SettingItem>
     <SettingItem v-if="themeStore.watermark.visible" key="8-1" :label="$t('theme.watermark.text')">
-      <AInput v-model:value="themeStore.watermark.text" placeholder="SoybeanAdmin" class="w-120px" />
+      <AInput v-model:value="themeStore.watermark.text" placeholder="Galaxy Admin" class="w-120px" />
     </SettingItem>
   </TransitionGroup>
 </template>

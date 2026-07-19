@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Modal } from 'ant-design-vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import {
@@ -41,6 +41,31 @@ const pagination = reactive<TablePaginationConfig>({
 });
 
 const statusOptions = ref<{ value: number; label: string }[]>([]);
+
+const tableContainerRef = ref<HTMLElement | null>(null);
+const tableScrollY = ref<number>(400);
+let tableResizeObserver: ResizeObserver | null = null;
+
+/** 根据容器实际高度动态计算表格 body 可滚动高度，确保表头与分页条始终可见 */
+function updateTableScrollY() {
+  if (!tableContainerRef.value) return;
+  // 预留表头(~40px) + 分页条(~48px) + 安全边距，避免最下面被截断
+  const reserved = 96;
+  const y = Math.max(200, tableContainerRef.value.clientHeight - reserved);
+  tableScrollY.value = y;
+}
+
+function startTableResizeObserver() {
+  updateTableScrollY();
+  if (typeof ResizeObserver === 'undefined' || !tableContainerRef.value) return;
+  tableResizeObserver = new ResizeObserver(updateTableScrollY);
+  tableResizeObserver.observe(tableContainerRef.value);
+}
+
+function stopTableResizeObserver() {
+  tableResizeObserver?.disconnect();
+  tableResizeObserver = null;
+}
 
 async function loadStatusOptions() {
   const { data, error } = await fetchUserEnums();
@@ -262,6 +287,11 @@ const genderMap: Record<number, string> = { 0: '未知', 1: '男', 2: '女' };
 onMounted(() => {
   loadStatusOptions();
   getData();
+  startTableResizeObserver();
+});
+
+onUnmounted(() => {
+  stopTableResizeObserver();
 });
 </script>
 
@@ -293,74 +323,76 @@ onMounted(() => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="user-card flex-1-hidden card-wrapper">
       <div class="mb-16px">
         <AButton v-if="hasAuth('system:user:add')" type="primary" @click="handleAdd">新增用户</AButton>
       </div>
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1520 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'index'">
-            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+      <div ref="tableContainerRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1520, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'index'">
+              {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+            </template>
+            <template v-if="column.key === 'avatar'">
+              <img
+                v-if="(record as Api.User.UserVO).avatarPreviewUrl"
+                :src="(record as Api.User.UserVO).avatarPreviewUrl"
+                alt="头像"
+                class="mx-auto block size-48px rd-1/2 object-cover"
+              />
+              <SvgIcon v-else icon="ph:user-circle" class="mx-auto block size-48px text-40px" />
+            </template>
+            <template v-if="column.key === 'gender'">
+              {{ genderMap[record.gender ?? 0] }}
+            </template>
+            <template v-if="column.key === 'status'">
+              <ASwitch
+                :disabled="!hasAuth('system:user:editStatus')"
+                :checked="record.status === 1"
+                @change="(checked: any) => handleStatusChange(record as Api.User.UserVO, Boolean(checked))"
+              />
+            </template>
+            <template v-if="column.key === 'action'">
+              <ASpace>
+                <AButton
+                  v-if="hasAuth('system:user:edit')"
+                  type="link"
+                  size="small"
+                  @click="handleEdit(record as Api.User.UserVO)"
+                >
+                  编辑
+                </AButton>
+                <AButton
+                  v-if="hasAuth('system:user:changePassword')"
+                  type="link"
+                  size="small"
+                  @click="handleChangePassword(record as Api.User.UserVO)"
+                >
+                  修改密码
+                </AButton>
+                <AButton
+                  v-if="hasAuth('system:user:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.User.UserVO)"
+                >
+                  删除
+                </AButton>
+              </ASpace>
+            </template>
           </template>
-          <template v-if="column.key === 'avatar'">
-            <img
-              v-if="(record as Api.User.UserVO).avatarPreviewUrl"
-              :src="(record as Api.User.UserVO).avatarPreviewUrl"
-              alt="头像"
-              class="mx-auto block size-48px rd-1/2 object-cover"
-            />
-            <SvgIcon v-else icon="ph:user-circle" class="mx-auto block size-48px text-40px" />
-          </template>
-          <template v-if="column.key === 'gender'">
-            {{ genderMap[record.gender ?? 0] }}
-          </template>
-          <template v-if="column.key === 'status'">
-            <ASwitch
-              :disabled="!hasAuth('system:user:editStatus')"
-              :checked="record.status === 1"
-              @change="(checked: any) => handleStatusChange(record as Api.User.UserVO, Boolean(checked))"
-            />
-          </template>
-          <template v-if="column.key === 'action'">
-            <ASpace>
-              <AButton
-                v-if="hasAuth('system:user:edit')"
-                type="link"
-                size="small"
-                @click="handleEdit(record as Api.User.UserVO)"
-              >
-                编辑
-              </AButton>
-              <AButton
-                v-if="hasAuth('system:user:changePassword')"
-                type="link"
-                size="small"
-                @click="handleChangePassword(record as Api.User.UserVO)"
-              >
-                修改密码
-              </AButton>
-              <AButton
-                v-if="hasAuth('system:user:delete')"
-                type="link"
-                size="small"
-                danger
-                @click="handleDelete(record as Api.User.UserVO)"
-              >
-                删除
-              </AButton>
-            </ASpace>
-          </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </ACard>
 
     <UserModal
@@ -380,4 +412,10 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.user-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

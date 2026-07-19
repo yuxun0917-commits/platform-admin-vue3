@@ -33,7 +33,7 @@ declare module "@elegant-router/types" {
     "404": "/404";
     "500": "/500";
     "coming-soon": "/coming-soon";
-    "home": "/home";
+    "dashboard": "/dashboard";
     "iframe-page": "/iframe-page/:url";
     "log": "/log";
     "log_loginlog": "/log/loginlog";
@@ -101,7 +101,7 @@ declare module "@elegant-router/types" {
     | "404"
     | "500"
     | "coming-soon"
-    | "home"
+    | "dashboard"
     | "iframe-page"
     | "log"
     | "login"
@@ -132,7 +132,7 @@ declare module "@elegant-router/types" {
     | "coming-soon"
     | "iframe-page"
     | "login"
-    | "home"
+    | "dashboard"
     | "log_loginlog"
     | "log_operlog"
     | "monitor_job"

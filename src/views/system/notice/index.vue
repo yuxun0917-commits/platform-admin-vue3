@@ -3,8 +3,12 @@ import { onMounted, reactive, ref } from 'vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchNoticeDelete, fetchNoticeEnums, fetchNoticePage } from '@/service/api';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import { useAuth } from '@/hooks/business/auth';
 import NoticeModal from './modules/notice-modal.vue';
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 defineOptions({
   name: 'SystemNotice'
@@ -208,57 +212,59 @@ onMounted(() => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="notice-card flex-1-hidden card-wrapper">
       <div class="mb-16px">
         <AButton v-if="hasAuth('system:notice:add')" type="primary" @click="openAdd">新增通知</AButton>
       </div>
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1280 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'index'">
-            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+      <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1280, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'index'">
+              {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+            </template>
+            <template v-if="column.key === 'position'">
+              <ATag :color="(record as Api.Notice.NoticeVO).position === 2 ? 'blue' : 'default'">
+                {{ positionLabel((record as Api.Notice.NoticeVO).position) }}
+              </ATag>
+            </template>
+            <template v-if="column.key === 'status'">
+              <ATag :color="(record as Api.Notice.NoticeVO).status === 1 ? 'success' : 'default'">
+                {{ (record as Api.Notice.NoticeVO).status === 1 ? '正常' : '禁用' }}
+              </ATag>
+            </template>
+            <template v-if="column.key === 'action'">
+              <ASpace>
+                <AButton
+                  v-if="hasAuth('system:notice:edit')"
+                  type="link"
+                  size="small"
+                  @click="openEdit(record as Api.Notice.NoticeVO)"
+                >
+                  编辑
+                </AButton>
+                <AButton
+                  v-if="hasAuth('system:notice:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.Notice.NoticeVO)"
+                >
+                  删除
+                </AButton>
+              </ASpace>
+            </template>
           </template>
-          <template v-if="column.key === 'position'">
-            <ATag :color="(record as Api.Notice.NoticeVO).position === 2 ? 'blue' : 'default'">
-              {{ positionLabel((record as Api.Notice.NoticeVO).position) }}
-            </ATag>
-          </template>
-          <template v-if="column.key === 'status'">
-            <ATag :color="(record as Api.Notice.NoticeVO).status === 1 ? 'success' : 'default'">
-              {{ (record as Api.Notice.NoticeVO).status === 1 ? '正常' : '禁用' }}
-            </ATag>
-          </template>
-          <template v-if="column.key === 'action'">
-            <ASpace>
-              <AButton
-                v-if="hasAuth('system:notice:edit')"
-                type="link"
-                size="small"
-                @click="openEdit(record as Api.Notice.NoticeVO)"
-              >
-                编辑
-              </AButton>
-              <AButton
-                v-if="hasAuth('system:notice:delete')"
-                type="link"
-                size="small"
-                danger
-                @click="handleDelete(record as Api.Notice.NoticeVO)"
-              >
-                删除
-              </AButton>
-            </ASpace>
-          </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </ACard>
 
     <NoticeModal
@@ -270,4 +276,10 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.notice-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

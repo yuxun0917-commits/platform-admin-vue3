@@ -12,6 +12,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AAvatar: typeof import('ant-design-vue/es')['Avatar']
     ABreadcrumb: typeof import('ant-design-vue/es')['Breadcrumb']
     ABreadcrumbItem: typeof import('ant-design-vue/es')['BreadcrumbItem']
     AButton: typeof import('ant-design-vue/es')['Button']
@@ -82,6 +83,7 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const AAvatar: typeof import('ant-design-vue/es')['Avatar']
   const ABreadcrumb: typeof import('ant-design-vue/es')['Breadcrumb']
   const ABreadcrumbItem: typeof import('ant-design-vue/es')['BreadcrumbItem']
   const AButton: typeof import('ant-design-vue/es')['Button']

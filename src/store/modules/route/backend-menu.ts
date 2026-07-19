@@ -1,6 +1,7 @@
 import type { RouteComponent, RouteRecordRaw } from 'vue-router';
 import type { RouteKey, RoutePath } from '@elegant-router/types';
 import { useSvgIcon } from '@/hooks/common/icon';
+import { $t } from '@/locales';
 import BaseLayout from '@/layouts/base-layout/index.vue';
 
 /**
@@ -194,6 +195,28 @@ export function transformMenusToRoutes(menus: Api.Auth.MenuTree[]): RouteRecordR
 /** Transform backend menu tree to global sidebar menus */
 export function transformMenusToGlobalMenus(menus: Api.Auth.MenuTree[]): App.Global.Menu[] {
   return menus.map(menu => buildGlobalMenu(menu, '')).filter((item): item is App.Global.Menu => item !== null);
+}
+
+/**
+ * Build the dashboard (home) menu entry.
+ *
+ * The dashboard is the landing page and, per product requirements, must always be
+ * shown in the sidebar without permission gating and must appear as the FIRST item —
+ * ahead of the backend-driven menu tree. Its route is registered independently by the
+ * static auth routes, so this only contributes the sidebar node.
+ */
+export function buildDashboardMenu(): App.Global.Menu {
+  const { SvgIconVNode } = useSvgIcon();
+  const label = $t('route.dashboard');
+
+  return {
+    key: 'dashboard',
+    label,
+    routeKey: 'dashboard' as unknown as RouteKey,
+    routePath: '/dashboard' as unknown as RoutePath,
+    icon: SvgIconVNode({ icon: 'ep:odometer', fontSize: 20 }),
+    title: label
+  };
 }
 
 /**

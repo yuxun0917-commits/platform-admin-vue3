@@ -5,6 +5,7 @@ import type { TablePaginationConfig } from 'ant-design-vue';
 import Sortable from 'sortablejs';
 import { fetchPostDelete, fetchPostEnums, fetchPostPage, fetchPostSort } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import PostModal from './modules/post-modal.vue';
 
 defineOptions({
@@ -116,7 +117,8 @@ function handleDelete(row: Api.Post.PostVO) {
 }
 
 /* ---------- 拖拽排序（基于 SortableJS，整行可拖，按钮除外） ---------- */
-const tableWrapRef = ref<HTMLElement>();
+const tableWrapRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableWrapRef);
 let sortableInstance: Sortable | null = null;
 
 function destroySortable() {
@@ -128,8 +130,8 @@ function destroySortable() {
 
 function clearDragHighlights() {
   const tbodyEl = tableWrapRef.value?.querySelector('.ant-table-tbody');
-  tbodyEl?.querySelectorAll('tr.drag-allowed, tr.drag-source').forEach(tr => {
-    tr.classList.remove('drag-allowed', 'drag-source');
+  tbodyEl?.querySelectorAll('tr.drag-source').forEach(tr => {
+    tr.classList.remove('drag-source');
   });
 }
 
@@ -149,10 +151,6 @@ function initSortable() {
     onStart(evt) {
       const itemEl = evt.item as HTMLElement;
       itemEl.classList.add('drag-source');
-      // 给整表所有行加红色虚线框，圈出可拖拽范围（岗位为扁平列表，整表可相互拖）
-      Array.from(tbody.querySelectorAll('tr[data-row-key]')).forEach(tr => {
-        (tr as HTMLElement).classList.add('drag-allowed');
-      });
     },
     onEnd(evt) {
       if (evt.oldIndex === evt.newIndex) {
@@ -299,11 +297,11 @@ onMounted(() => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="post-card flex-1-hidden card-wrapper">
       <div class="mb-16px flex items-center gap-12px">
         <AButton v-if="hasAuth('system:post:add')" type="primary" @click="handleAdd">新增岗位</AButton>
         <span v-if="hasAuth('system:post:sort')" class="text-12px text-gray-400">
-          拖动整行（或左侧手柄）可调整排序，红色虚线框内为可拖拽范围
+          拖动整行（或最左侧手柄）可调整排序
         </span>
       </div>
       <div ref="tableWrapRef" class="post-drag-wrap">
@@ -314,7 +312,7 @@ onMounted(() => {
           :pagination="pagination"
           row-key="id"
           size="small"
-          :scroll="{ x: 1114 }"
+          :scroll="{ x: 1114, y: tableScrollY }"
           @change="handleTableChange"
         >
           <template #bodyCell="{ column, record }">
@@ -375,8 +373,16 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.post-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 .post-drag-wrap {
+  flex: 1;
+  min-height: 0;
   width: 100%;
+  overflow: hidden;
 }
 
 /* 整行可拖拽的视觉提示（交互元素除外） */
@@ -398,10 +404,6 @@ onMounted(() => {
 :deep(.ant-table-tbody .sortable-drag) > td {
   background-color: #fff !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-/* 拖拽时：可拖拽范围红色虚线框 */
-:deep(.ant-table-tbody tr.drag-allowed) > td {
-  border: 2px dashed #f5222d !important;
 }
 :deep(.ant-table-tbody tr.drag-source) > td {
   background-color: rgba(245, 34, 45, 0.08) !important;

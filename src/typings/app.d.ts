@@ -460,32 +460,34 @@ declare namespace App {
           prdDep: string;
           devDep: string;
         };
-        home: {
-          greeting: string;
-          weatherDesc: string;
-          projectCount: string;
-          todo: string;
-          message: string;
-          downloadCount: string;
-          registerCount: string;
-          schedule: string;
-          study: string;
-          work: string;
-          rest: string;
-          entertainment: string;
-          visitCount: string;
-          turnover: string;
-          dealCount: string;
-          projectNews: {
-            title: string;
-            moreNews: string;
-            desc1: string;
-            desc2: string;
-            desc3: string;
-            desc4: string;
-            desc5: string;
-          };
-          creativity: string;
+        dashboard: {
+          title: string;
+          subtitle: string;
+          serviceStatus: string;
+          newUsersThisWeek: string;
+          loginsToday: string;
+          onlineUsers: string;
+          systemAnnouncements: string;
+          serverHealth: string;
+          cpu: string;
+          memory: string;
+          disk: string;
+          networkUsage: string;
+          notSupported: string;
+          opsOverview: string;
+          loginFailures: string;
+          operationExceptions: string;
+          taskFailures: string;
+          pausedTasks: string;
+          loginTrend: string;
+          recentLogins: string;
+          latestAnnouncements: string;
+          success: string;
+          failed: string;
+          yesterday: string;
+          announcement1: string;
+          announcement2: string;
+          announcement3: string;
         };
         function: {
           tab: {

@@ -22,7 +22,7 @@ import {
   transformMenuToSearchMenus,
   updateLocaleOfGlobalMenus
 } from './shared';
-import { sortMenuTree, transformMenusToGlobalMenus, transformMenusToRoutes } from './backend-menu';
+import { buildDashboardMenu, sortMenuTree, transformMenusToGlobalMenus, transformMenusToRoutes } from './backend-menu';
 
 export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   const authStore = useAuthStore();
@@ -172,7 +172,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
 
     setIsInitConstantRoute(true);
 
-    tabStore.initHomeTab();
+    tabStore.initDashboardTab();
   }
 
   /** Init auth route */
@@ -190,7 +190,7 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
 
     initBackendMenu();
 
-    tabStore.initHomeTab();
+    tabStore.initDashboardTab();
   }
 
   /**
@@ -214,7 +214,11 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
       addRemoveRouteFn(removeFn);
     });
 
-    menus.value = transformMenusToGlobalMenus(sortedMenus);
+    const backendMenus = transformMenusToGlobalMenus(sortedMenus);
+
+    // Prepend the dashboard (home) as the first sidebar item — it is a constant landing
+    // page with no permission gating, shown ahead of the backend-driven menu tree.
+    menus.value = [buildDashboardMenu(), ...backendMenus];
   }
 
   /** Init static auth route */

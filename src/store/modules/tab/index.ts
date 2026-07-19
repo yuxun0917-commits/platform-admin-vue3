@@ -1,12 +1,12 @@
 import { computed, ref } from 'vue';
-import { defineStore } from 'pinia';
 import { useEventListener } from '@vueuse/core';
+import { defineStore } from 'pinia';
 import type { RouteKey } from '@elegant-router/types';
 import { router } from '@/router';
-import { SetupStoreId } from '@/enum';
+import { useRouteStore } from '@/store/modules/route';
 import { useRouterPush } from '@/hooks/common/router';
 import { localStg } from '@/utils/storage';
-import { useRouteStore } from '@/store/modules/route';
+import { SetupStoreId } from '@/enum';
 import { useThemeStore } from '../theme';
 import {
   extractTabsByAllRoutes,
@@ -14,7 +14,7 @@ import {
   filterTabsByIds,
   findTabByRouteName,
   getAllTabs,
-  getDefaultHomeTab,
+  getDefaultDashboardTab,
   getFixedTabIds,
   getTabByRoute,
   getTabIdByRoute,
@@ -32,15 +32,15 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
   const tabs = ref<App.Global.Tab[]>([]);
 
   /** Get active tab */
-  const homeTab = ref<App.Global.Tab>();
+  const dashboardTab = ref<App.Global.Tab>();
 
-  /** Init home tab */
-  function initHomeTab() {
-    homeTab.value = getDefaultHomeTab(router, routeStore.routeHome);
+  /** Init dashboard tab */
+  function initDashboardTab() {
+    dashboardTab.value = getDefaultDashboardTab(router, routeStore.routeHome);
   }
 
   /** Get all tabs */
-  const allTabs = computed(() => getAllTabs(tabs.value, homeTab.value));
+  const allTabs = computed(() => getAllTabs(tabs.value, dashboardTab.value));
 
   /** Active tab id */
   const activeTabId = ref<string>('');
@@ -79,9 +79,9 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
   function addTab(route: App.Global.TabRoute, active = true) {
     const tab = getTabByRoute(route);
 
-    const isHomeTab = tab.id === homeTab.value?.id;
+    const isDashboardTab = tab.id === dashboardTab.value?.id;
 
-    if (!isHomeTab && !isTabInTabs(tab.id, tabs.value)) {
+    if (!isDashboardTab && !isTabInTabs(tab.id, tabs.value)) {
       tabs.value.push(tab);
     }
 
@@ -108,7 +108,7 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
       return;
     }
 
-    const activeTab = updatedTabs.at(-1) || homeTab.value;
+    const activeTab = updatedTabs.at(-1) || dashboardTab.value;
 
     if (activeTab) {
       await switchRouteByTab(activeTab);
@@ -154,7 +154,7 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
       return;
     }
 
-    const activeTab = updatedTabs[updatedTabs.length - 1] || homeTab.value;
+    const activeTab = updatedTabs[updatedTabs.length - 1] || dashboardTab.value;
 
     await switchRouteByTab(activeTab);
     update();
@@ -192,8 +192,8 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
    * @param tabId
    */
   async function clearRightTabs(tabId: string) {
-    const isHomeTab = tabId === homeTab.value?.id;
-    if (isHomeTab) {
+    const isDashboardTab = tabId === dashboardTab.value?.id;
+    if (isDashboardTab) {
       clearTabs();
       return;
     }
@@ -244,7 +244,7 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
    * @param tabId
    */
   function isTabRetain(tabId: string) {
-    if (tabId === homeTab.value?.id) return true;
+    if (tabId === dashboardTab.value?.id) return true;
 
     const fixedTabIds = getFixedTabIds(tabs.value);
 
@@ -255,8 +255,8 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
   function updateTabsByLocale() {
     tabs.value = updateTabsByI18nKey(tabs.value);
 
-    if (homeTab.value) {
-      homeTab.value = updateTabByI18nKey(homeTab.value);
+    if (dashboardTab.value) {
+      dashboardTab.value = updateTabByI18nKey(dashboardTab.value);
     }
   }
 
@@ -276,7 +276,7 @@ export const useTabStore = defineStore(SetupStoreId.Tab, () => {
     /** All tabs */
     tabs: allTabs,
     activeTabId,
-    initHomeTab,
+    initDashboardTab,
     initTabStore,
     addTab,
     removeTab,

@@ -4,6 +4,7 @@ import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchDictItemDelete, fetchDictItemPage } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import DictItemModal from './dict-item-modal.vue';
 
 defineOptions({
@@ -11,6 +12,9 @@ defineOptions({
 });
 
 const { hasAuth } = useAuth();
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 interface Props {
   visible: boolean;
@@ -144,7 +148,13 @@ watch(
 </script>
 
 <template>
-  <ADrawer :open="visible" :title="title" width="1280px" @close="emit('update:visible', false)">
+  <ADrawer
+    class="dict-item-drawer"
+    :open="visible"
+    :title="title"
+    width="1280px"
+    @close="emit('update:visible', false)"
+  >
     <AForm layout="inline" :model="search">
       <AFormItem label="标签/值">
         <AInput v-model:value="search.keyword" placeholder="字典标签/键值" allow-clear @press-enter="handleSearch" />
@@ -167,54 +177,56 @@ watch(
       <AButton v-if="hasAuth('system:dict:item:add')" type="primary" @click="openAdd">新增字典项</AButton>
     </div>
 
-    <ATable
-      :columns="columns"
-      :data-source="tableData"
-      :loading="loading"
-      :pagination="pagination"
-      row-key="id"
-      size="small"
-      :scroll="{ x: 1220 }"
-      @change="handleTableChange"
-    >
-      <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'cssClass'">
-          <ATag
-            v-if="(record as Api.Dict.DictItemVO).cssClass"
-            :color="tagColor((record as Api.Dict.DictItemVO).cssClass)"
-          >
-            {{ (record as Api.Dict.DictItemVO).cssClass }}
-          </ATag>
-          <span v-else class="text-gray-300">-</span>
-        </template>
-        <template v-if="column.key === 'status'">
-          <ATag :color="(record as Api.Dict.DictItemVO).status === 1 ? 'success' : 'error'">
-            {{ (record as Api.Dict.DictItemVO).status === 1 ? '正常' : '禁用' }}
-          </ATag>
-        </template>
-        <template v-if="column.key === 'action'">
-          <ASpace>
-            <AButton
-              v-if="hasAuth('system:dict:item:edit')"
-              type="link"
-              size="small"
-              @click="openEdit(record as Api.Dict.DictItemVO)"
+    <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+      <ATable
+        :columns="columns"
+        :data-source="tableData"
+        :loading="loading"
+        :pagination="pagination"
+        row-key="id"
+        size="small"
+        :scroll="{ x: 1220, y: tableScrollY }"
+        @change="handleTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'cssClass'">
+            <ATag
+              v-if="(record as Api.Dict.DictItemVO).cssClass"
+              :color="tagColor((record as Api.Dict.DictItemVO).cssClass)"
             >
-              编辑
-            </AButton>
-            <AButton
-              v-if="hasAuth('system:dict:item:delete')"
-              type="link"
-              size="small"
-              danger
-              @click="handleDelete(record as Api.Dict.DictItemVO)"
-            >
-              删除
-            </AButton>
-          </ASpace>
+              {{ (record as Api.Dict.DictItemVO).cssClass }}
+            </ATag>
+            <span v-else class="text-gray-300">-</span>
+          </template>
+          <template v-if="column.key === 'status'">
+            <ATag :color="(record as Api.Dict.DictItemVO).status === 1 ? 'success' : 'error'">
+              {{ (record as Api.Dict.DictItemVO).status === 1 ? '正常' : '禁用' }}
+            </ATag>
+          </template>
+          <template v-if="column.key === 'action'">
+            <ASpace>
+              <AButton
+                v-if="hasAuth('system:dict:item:edit')"
+                type="link"
+                size="small"
+                @click="openEdit(record as Api.Dict.DictItemVO)"
+              >
+                编辑
+              </AButton>
+              <AButton
+                v-if="hasAuth('system:dict:item:delete')"
+                type="link"
+                size="small"
+                danger
+                @click="handleDelete(record as Api.Dict.DictItemVO)"
+              >
+                删除
+              </AButton>
+            </ASpace>
+          </template>
         </template>
-      </template>
-    </ATable>
+      </ATable>
+    </div>
 
     <DictItemModal
       v-model:visible="itemModal.visible"
@@ -226,4 +238,14 @@ watch(
   </ADrawer>
 </template>
 
-<style scoped></style>
+<style scoped>
+.dict-item-drawer :deep(.ant-drawer-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dict-item-drawer :deep(.ant-drawer-body > .flex-1) {
+  min-height: 0;
+}
+</style>

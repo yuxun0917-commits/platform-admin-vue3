@@ -5,6 +5,7 @@ import type { TablePaginationConfig } from 'ant-design-vue';
 import Sortable from 'sortablejs';
 import { fetchRoleDelete, fetchRoleEditStatus, fetchRoleEnums, fetchRolePage, fetchRoleSort } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import RoleModal from './modules/role-modal.vue';
 import MenuAuthModal from './modules/menu-auth-modal.vue';
 
@@ -140,7 +141,8 @@ function handleAssignMenus(row: Api.Role.RoleVO) {
 }
 
 /* ---------- 拖拽排序（基于 SortableJS，整行可拖，按钮/开关除外） ---------- */
-const tableWrapRef = ref<HTMLElement>();
+const tableWrapRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableWrapRef);
 let sortableInstance: Sortable | null = null;
 
 function destroySortable() {
@@ -296,7 +298,7 @@ onMounted(() => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="role-card flex-1-hidden card-wrapper">
       <div class="mb-16px">
         <AButton v-if="hasAuth('system:role:add')" type="primary" @click="handleAdd">新增角色</AButton>
         <span v-if="hasAuth('system:role:sort')" class="pl-12px text-12px text-gray-400">
@@ -311,7 +313,7 @@ onMounted(() => {
           :pagination="pagination"
           row-key="id"
           size="small"
-          :scroll="{ x: 1200 }"
+          :scroll="{ x: 1200, y: tableScrollY }"
           @change="handleTableChange"
         >
           <template #bodyCell="{ column, record }">
@@ -389,6 +391,17 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.role-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.role-drag-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
 :deep(.ant-table-tbody > tr) {
   cursor: grab;
 }

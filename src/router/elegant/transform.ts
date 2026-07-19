@@ -179,7 +179,7 @@ const routeMap: RouteMap = {
   "404": "/404",
   "500": "/500",
   "coming-soon": "/coming-soon",
-  "home": "/home",
+  "dashboard": "/dashboard",
   "iframe-page": "/iframe-page/:url",
   "log": "/log",
   "log_loginlog": "/log/loginlog",

@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: 'SoybeanAdmin',
+    title: 'Galaxy Admin',
     updateTitle: 'System Version Update Notification',
     updateContent: 'A new version of the system has been detected. Do you want to refresh the page immediately?',
     updateConfirm: 'Refresh immediately',
@@ -158,7 +158,7 @@ const local: App.I18n.Schema = {
     500: 'Server Error',
     'iframe-page': 'Iframe',
     'coming-soon': 'Coming Soon',
-    home: 'Home',
+    dashboard: 'Dashboard',
     document: 'Document',
     document_project: 'Project Document',
     'document_project-link': 'Project Document(External Link)',
@@ -242,7 +242,7 @@ const local: App.I18n.Schema = {
     },
     about: {
       title: 'About',
-      introduction: `SoybeanAdmin is an elegant and powerful admin template, based on the latest front-end technology stack, including Vue3, Vite5, TypeScript, Pinia and UnoCSS. It has built-in rich theme configuration and components, strict code specifications, and an automated file routing system. In addition, it also uses the online mock data solution based on ApiFox. SoybeanAdmin provides you with a one-stop admin solution, no additional configuration, and out of the box. It is also a best practice for learning cutting-edge technologies quickly.`,
+      introduction: `Galaxy Admin is an elegant and powerful admin template, based on the latest front-end technology stack, including Vue3, Vite5, TypeScript, Pinia and UnoCSS. It has built-in rich theme configuration and components, strict code specifications, and an automated file routing system. In addition, it also uses the online mock data solution based on ApiFox. Galaxy Admin provides you with a one-stop admin solution, no additional configuration, and out of the box. It is also a best practice for learning cutting-edge technologies quickly.`,
       projectInfo: {
         title: 'Project Info',
         version: 'Version',
@@ -253,32 +253,34 @@ const local: App.I18n.Schema = {
       prdDep: 'Production Dependency',
       devDep: 'Development Dependency'
     },
-    home: {
-      greeting: 'Good morning, {userName}, today is another day full of vitality!',
-      weatherDesc: 'Today is cloudy to clear, 20℃ - 25℃!',
-      projectCount: 'Project Count',
-      todo: 'Todo',
-      message: 'Message',
-      downloadCount: 'Download Count',
-      registerCount: 'Register Count',
-      schedule: 'Work and rest Schedule',
-      study: 'Study',
-      work: 'Work',
-      rest: 'Rest',
-      entertainment: 'Entertainment',
-      visitCount: 'Visit Count',
-      turnover: 'Turnover',
-      dealCount: 'Deal Count',
-      projectNews: {
-        title: 'Project News',
-        moreNews: 'More News',
-        desc1: 'Soybean created the open source project soybean-admin on May 28, 2021!',
-        desc2: 'Yanbowe submitted a bug to soybean-admin, the multi-tab bar will not adapt.',
-        desc3: 'Soybean is ready to do sufficient preparation for the release of soybean-admin!',
-        desc4: 'Soybean is busy writing project documentation for soybean-admin!',
-        desc5: 'Soybean just wrote some of the workbench pages casually, and it was enough to see!'
-      },
-      creativity: 'Creativity'
+    dashboard: {
+      title: 'Management Platform · System Overview',
+      subtitle: 'Data from system runtime',
+      serviceStatus: 'Service Normal',
+      newUsersThisWeek: 'New Users This Week',
+      loginsToday: 'Logins Today',
+      onlineUsers: 'Online Users',
+      systemAnnouncements: 'System Announcements',
+      serverHealth: 'Server Health',
+      cpu: 'CPU',
+      memory: 'Memory',
+      disk: 'Disk',
+      networkUsage: 'Network Usage',
+      notSupported: 'Not Supported',
+      opsOverview: 'Ops Overview',
+      loginFailures: 'Login Failures',
+      operationExceptions: 'Operation Exceptions',
+      taskFailures: 'Task Failures',
+      pausedTasks: 'Paused Tasks',
+      loginTrend: 'Login Trend (Last 7 Days)',
+      recentLogins: 'Recent Logins',
+      latestAnnouncements: 'Latest Announcements',
+      success: 'Success',
+      failed: 'Failed',
+      yesterday: 'Yesterday',
+      announcement1: 'Platform V1.0 officially released',
+      announcement2: 'Scheduled task module online notice',
+      announcement3: 'Attachment storage policy adjustment'
     },
     function: {
       tab: {

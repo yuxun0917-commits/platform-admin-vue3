@@ -7,20 +7,20 @@ import { getRoutePath } from '@/router/elegant/transform';
  * Get all tabs
  *
  * @param tabs Tabs
- * @param homeTab Home tab
+ * @param dashboardTab Dashboard tab
  */
-export function getAllTabs(tabs: App.Global.Tab[], homeTab?: App.Global.Tab) {
-  if (!homeTab) {
+export function getAllTabs(tabs: App.Global.Tab[], dashboardTab?: App.Global.Tab) {
+  if (!dashboardTab) {
     return [];
   }
 
-  const filterHomeTabs = tabs.filter(tab => tab.id !== homeTab.id);
+  const filterDashboardTabs = tabs.filter(tab => tab.id !== dashboardTab.id);
 
-  const fixedTabs = filterHomeTabs.filter(isFixedTab).sort((a, b) => a.fixedIndex! - b.fixedIndex!);
+  const fixedTabs = filterDashboardTabs.filter(isFixedTab).sort((a, b) => a.fixedIndex! - b.fixedIndex!);
 
-  const remainTabs = filterHomeTabs.filter(tab => !isFixedTab(tab));
+  const remainTabs = filterDashboardTabs.filter(tab => !isFixedTab(tab));
 
-  const allTabs = [homeTab, ...fixedTabs, ...remainTabs];
+  const allTabs = [dashboardTab, ...fixedTabs, ...remainTabs];
 
   return updateTabsLabel(allTabs);
 }
@@ -107,30 +107,30 @@ export function getRouteIcons(route: App.Global.TabRoute) {
 }
 
 /**
- * Get default home tab
+ * Get default dashboard tab
  *
  * @param router
- * @param homeRouteName routeHome in useRouteStore
+ * @param dashboardRouteName routeHome in useRouteStore
  */
-export function getDefaultHomeTab(router: Router, homeRouteName: LastLevelRouteKey) {
-  const homeRoutePath = getRoutePath(homeRouteName);
-  const i18nLabel = $t(`route.${homeRouteName}`);
+export function getDefaultDashboardTab(router: Router, dashboardRouteName: LastLevelRouteKey) {
+  const dashboardRoutePath = getRoutePath(dashboardRouteName);
+  const i18nLabel = $t(`route.${dashboardRouteName}`);
 
-  let homeTab: App.Global.Tab = {
-    id: getRoutePath(homeRouteName),
-    label: i18nLabel || homeRouteName,
-    routeKey: homeRouteName,
-    routePath: homeRoutePath,
-    fullPath: homeRoutePath
+  let dashboardTab: App.Global.Tab = {
+    id: getRoutePath(dashboardRouteName),
+    label: i18nLabel || dashboardRouteName,
+    routeKey: dashboardRouteName,
+    routePath: dashboardRoutePath,
+    fullPath: dashboardRoutePath
   };
 
   const routes = router.getRoutes();
-  const homeRoute = routes.find(route => route.name === homeRouteName);
-  if (homeRoute) {
-    homeTab = getTabByRoute(homeRoute);
+  const dashboardRoute = routes.find(route => route.name === dashboardRouteName);
+  if (dashboardRoute) {
+    dashboardTab = getTabByRoute(dashboardRoute);
   }
 
-  return homeTab;
+  return dashboardTab;
 }
 
 /**
