@@ -28,15 +28,13 @@ declare namespace Api.Post {
     postCode: string;
     /** 岗位名称 */
     postName: string;
-    /** 显示顺序 */
-    displayOrder: number;
     /** 状态（0禁用 1正常） */
     status: Api.Common.EnableStatus;
     /** 备注 */
     remark?: string;
   }
 
-  /** 编辑岗位 VO（后端接收 id/postCode/postName/displayOrder/status/remark） */
+  /** 编辑岗位 VO（后端接收 id/postCode/postName/status/remark） */
   interface PostEditVO {
     /** 岗位ID */
     id: number;
@@ -44,8 +42,6 @@ declare namespace Api.Post {
     postCode: string;
     /** 岗位名称 */
     postName: string;
-    /** 显示顺序 */
-    displayOrder: number;
     /** 状态（0禁用 1正常） */
     status: Api.Common.EnableStatus;
     /** 备注 */

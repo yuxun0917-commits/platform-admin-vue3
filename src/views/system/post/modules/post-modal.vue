@@ -28,7 +28,6 @@ const formRef = ref<FormInstance>();
 const formModel = reactive<Partial<Api.Post.PostSaveVO & Api.Post.PostEditVO>>({
   postCode: '',
   postName: '',
-  displayOrder: 1,
   status: 1,
   remark: ''
 });
@@ -43,7 +42,6 @@ function resetForm() {
   formModel.id = undefined;
   formModel.postCode = '';
   formModel.postName = '';
-  formModel.displayOrder = 1;
   formModel.status = 1;
   formModel.remark = '';
   formRef.value?.resetFields();
@@ -54,7 +52,6 @@ function setFormFromRow() {
     formModel.id = props.row.id;
     formModel.postCode = props.row.postCode;
     formModel.postName = props.row.postName;
-    formModel.displayOrder = props.row.displayOrder;
     formModel.status = props.row.status;
     formModel.remark = props.row.remark;
   }
@@ -118,10 +115,7 @@ function handleCancel() {
       <AFormItem label="岗位名称" name="postName" :rules="[{ required: true, message: '请输入岗位名称' }]">
         <AInput v-model:value="formModel.postName" placeholder="请输入岗位名称" />
       </AFormItem>
-      <AFormItem label="显示顺序" name="displayOrder" :rules="[{ required: true, message: '请输入显示顺序' }]">
-        <AInputNumber v-model:value="formModel.displayOrder" :min="0" class="w-full" />
-      </AFormItem>
-      <AFormItem label="状态" name="status">
+      <AFormItem label="状态" name="status" :rules="[{ required: true, message: '请选择状态' }]">
         <ASelect v-model:value="formModel.status" :options="statusOptions" placeholder="请选择状态" />
       </AFormItem>
       <AFormItem label="备注" name="remark">
