@@ -42,7 +42,7 @@ pipeline {
                 echo "正在拉取分支: ${params.branch}"
                 git branch: "${params.branch}",
                     url: 'https://github.com/yuxun0917-commits/platform-admin-vue3.git',
-                    credentialsId: 'GITHUB_CRED_ID'   // TODO: 替换为你的 Jenkins GitHub 凭据 ID
+                    credentialsId: '6156f9c0-a42c-4b87-a01c-3302e144e7e3'   // TODO: 替换为你的 Jenkins GitHub 凭据 ID
                 echo '代码拉取完成'
             }
         }
