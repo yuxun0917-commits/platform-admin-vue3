@@ -66,7 +66,7 @@
 - 菜单跨级拦截提示：用普通变量 `dragTargetParentId` 在 `onMove` 里记录目标 parentId，`onEnd` 位置未变且 `dragTargetParentId !== dragged.parentId` 时 `message.warning('仅支持同级菜单排序')`（`onEnd.evt.related` 在完全拦截时为 null，不可靠，故用 onMove 记录）。
 - 菜单/部门「拖拽」列 `:expand-icon-column-index="hasAuth('...:sort') ? 1 : 0"`：拖拽列存在→箭头 index1（菜单名称列）、列缺失→回退 index0（仍菜单名称列），箭头始终落在名称列；拖拽列（第0列）存在时显示在最左。
 
-## 脚手架品牌名（2026-07-20 用户拍板）
-- 中文：**星河 Admin**；英文：**Galaxy Admin**。
+## 脚手架品牌名（2026-07-20 用户拍板，后续统一）
+- **最终统一为 `Galaxy Admin`（中英文一致）**。初期中文曾用「星河 Admin」，用户随后要求中文也改成 `Galaxy Admin`；`zh-cn.ts` 的 `system.title` 与 `about.introduction` 均已同步为 `Galaxy Admin`。
 - 展示层落地：`src/locales/langs/zh-cn.ts` / `en-us.ts` 的 `system.title`（侧边栏 Logo + 登录页共用，跟随语言切换）；`about.introduction` 模板介绍；`src/layouts/modules/theme-drawer/modules/page-fun.vue` 水印占位；`.env` 的 `VITE_APP_TITLE` / `VITE_APP_DESC`。
 - 未动：`package.json` 的 `name: "soybean-admin-antd"`（改名需同步 workspace `link:` 引用，风险高）；`SystemLogo` SVG 图形字母；`CHANGELOG.md`/`LICENSE`/`@soybeanjs/*` 依赖（第三方/历史）。
