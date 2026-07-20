@@ -118,7 +118,7 @@ watch(
 );
 
 const columns = [
-  { title: '日志编号', dataIndex: 'id', key: 'id', align: 'center' as const, width: 90 },
+  { title: '序号', key: 'index', align: 'center' as const, width: 70 },
   { title: '任务名称', dataIndex: 'jobName', key: 'jobName', align: 'center' as const, width: 140, ellipsis: true },
   { title: '任务组名', dataIndex: 'jobGroup', key: 'jobGroup', align: 'center' as const, width: 100 },
   {
@@ -174,8 +174,11 @@ const columns = [
         :scroll="{ x: 1140 }"
         @change="handleTableChange"
       >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+          </template>
+          <template v-else-if="column.key === 'status'">
             <ATag :color="(record as Api.JobLog.SysJobLogVO).status === 1 ? 'success' : 'error'">
               {{ (record as Api.JobLog.SysJobLogVO).statusText }}
             </ATag>
