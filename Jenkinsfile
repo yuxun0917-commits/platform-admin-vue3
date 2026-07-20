@@ -29,7 +29,7 @@ pipeline {
 
     tools {
         // 需 Jenkins 全局工具里已安装该 NodeJS 版本（>=18.12）
-        nodejs 'NodeJS 22.12.0'
+        nodejs 'NodeJS 22.22.3'
     }
 
     environment {
