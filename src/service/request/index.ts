@@ -10,6 +10,10 @@ import type { RequestInstanceState } from './type';
 const isHttpProxy = import.meta.env.DEV && import.meta.env.VITE_HTTP_PROXY === 'Y';
 const { baseURL, otherBaseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
+// 所有业务接口统一加 /api 前缀（baseURL 末尾自动拼接，proxy 模式下若 baseURL 为空则退化为 '/api'）
+const API_PREFIX = '/api';
+const baseURLWithApi = baseURL ? `${baseURL.replace(/\/$/, '')}${API_PREFIX}` : API_PREFIX;
+
 /** 判断后端业务码是否属于「需要二次认证」（可识别状态，非错误，不应触发登出或错误提示） */
 function isSecondFactorCode(code: string): boolean {
   const codes = import.meta.env.VITE_SERVICE_SECOND_FACTOR_CODES?.split(',').filter(Boolean) || [];
@@ -45,7 +49,7 @@ function showModalLogout(message: string, cleanup: () => void) {
 
 export const request = createFlatRequest<App.Service.Response, RequestInstanceState>(
   {
-    baseURL,
+    baseURL: baseURLWithApi,
     headers: {}
   },
   {
