@@ -4,6 +4,7 @@ import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchJobChangeStatus, fetchJobDelete, fetchJobEnums, fetchJobPage, fetchJobRun } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import JobModal from './modules/job-modal.vue';
 import JobLogDrawer from './modules/job-log-drawer.vue';
 
@@ -12,6 +13,9 @@ defineOptions({
 });
 
 const { hasAuth } = useAuth();
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 const searchParams = reactive<{ keyword: string; status: number | undefined }>({
   keyword: '',
@@ -243,67 +247,69 @@ onMounted(async () => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="job-card flex-1-hidden card-wrapper">
       <div class="mb-16px">
         <AButton v-if="hasAuth('monitor:job:add')" type="primary" @click="handleAdd">新增任务</AButton>
       </div>
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1490 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'status'">
-            <ASwitch
-              :disabled="!hasAuth('monitor:job:changeStatus')"
-              :checked="(record as Api.Job.SysJobVO).status === 1"
-              @change="(checked: any) => handleStatusChange(record as Api.Job.SysJobVO, Boolean(checked))"
-            />
+      <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1490, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'status'">
+              <ASwitch
+                :disabled="!hasAuth('monitor:job:changeStatus')"
+                :checked="(record as Api.Job.SysJobVO).status === 1"
+                @change="(checked: any) => handleStatusChange(record as Api.Job.SysJobVO, Boolean(checked))"
+              />
+            </template>
+            <template v-else-if="column.key === 'action'">
+              <ASpace>
+                <AButton
+                  v-if="hasAuth('monitor:job:edit')"
+                  type="link"
+                  size="small"
+                  @click="handleEdit(record as Api.Job.SysJobVO)"
+                >
+                  编辑
+                </AButton>
+                <AButton
+                  v-if="hasAuth('monitor:job:run')"
+                  type="link"
+                  size="small"
+                  @click="handleRun(record as Api.Job.SysJobVO)"
+                >
+                  执行一次
+                </AButton>
+                <AButton
+                  v-if="hasAuth('monitor:jobLog:list')"
+                  type="link"
+                  size="small"
+                  @click="handleViewLog(record as Api.Job.SysJobVO)"
+                >
+                  日志
+                </AButton>
+                <AButton
+                  v-if="hasAuth('monitor:job:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.Job.SysJobVO)"
+                >
+                  删除
+                </AButton>
+              </ASpace>
+            </template>
           </template>
-          <template v-else-if="column.key === 'action'">
-            <ASpace>
-              <AButton
-                v-if="hasAuth('monitor:job:edit')"
-                type="link"
-                size="small"
-                @click="handleEdit(record as Api.Job.SysJobVO)"
-              >
-                编辑
-              </AButton>
-              <AButton
-                v-if="hasAuth('monitor:job:run')"
-                type="link"
-                size="small"
-                @click="handleRun(record as Api.Job.SysJobVO)"
-              >
-                执行一次
-              </AButton>
-              <AButton
-                v-if="hasAuth('monitor:jobLog:list')"
-                type="link"
-                size="small"
-                @click="handleViewLog(record as Api.Job.SysJobVO)"
-              >
-                日志
-              </AButton>
-              <AButton
-                v-if="hasAuth('monitor:job:delete')"
-                type="link"
-                size="small"
-                danger
-                @click="handleDelete(record as Api.Job.SysJobVO)"
-              >
-                删除
-              </AButton>
-            </ASpace>
-          </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </ACard>
 
     <JobModal v-model:visible="modalState.visible" :type="modalState.type" :row="modalState.row" @submitted="getData" />
@@ -315,4 +321,10 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.job-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

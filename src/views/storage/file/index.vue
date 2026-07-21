@@ -9,12 +9,16 @@ import {
   fetchAttachmentPage,
   fetchStorageConfigSelectList
 } from '@/service/api';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import FileUploadModal from './modules/file-upload-modal.vue';
 import FilePreviewModal from './modules/file-preview-modal.vue';
 
 defineOptions({
   name: 'StorageFile'
 });
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 interface SearchParams {
   keyword: string;
@@ -282,59 +286,61 @@ onBeforeUnmount(revokePreviewUrl);
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="file-card flex-1-hidden card-wrapper">
       <div class="mb-16px">
         <AButton type="primary" @click="uploadState.visible = true">上传文件</AButton>
       </div>
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1060 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'index'">
-            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+      <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1060, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'index'">
+              {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+            </template>
+            <template v-if="column.key === 'fileName'">
+              <span>{{ (record as Api.Attachment.AttachmentVO).fileName }}</span>
+            </template>
+            <template v-if="column.key === 'fileExt'">
+              <ATag v-if="(record as Api.Attachment.AttachmentVO).fileExt" color="blue">
+                {{ (record as Api.Attachment.AttachmentVO).fileExt.toUpperCase() }}
+              </ATag>
+              <span v-else>—</span>
+            </template>
+            <template v-if="column.key === 'fileSize'">
+              {{ formatSize((record as Api.Attachment.AttachmentVO).fileSize) }}
+            </template>
+            <template v-if="column.key === 'bizType'">
+              {{ getAttachmentBizTypeText((record as Api.Attachment.AttachmentVO).bizType) }}
+            </template>
+            <template v-if="column.key === 'action'">
+              <ASpace>
+                <AButton
+                  v-if="isImage(record as Api.Attachment.AttachmentVO)"
+                  type="link"
+                  size="small"
+                  @click="handlePreview(record as Api.Attachment.AttachmentVO)"
+                >
+                  预览
+                </AButton>
+                <AButton type="link" size="small" @click="handleDownload(record as Api.Attachment.AttachmentVO)">
+                  下载
+                </AButton>
+                <AButton type="link" size="small" danger @click="handleDelete(record as Api.Attachment.AttachmentVO)">
+                  删除
+                </AButton>
+              </ASpace>
+            </template>
           </template>
-          <template v-if="column.key === 'fileName'">
-            <span>{{ (record as Api.Attachment.AttachmentVO).fileName }}</span>
-          </template>
-          <template v-if="column.key === 'fileExt'">
-            <ATag v-if="(record as Api.Attachment.AttachmentVO).fileExt" color="blue">
-              {{ (record as Api.Attachment.AttachmentVO).fileExt.toUpperCase() }}
-            </ATag>
-            <span v-else>—</span>
-          </template>
-          <template v-if="column.key === 'fileSize'">
-            {{ formatSize((record as Api.Attachment.AttachmentVO).fileSize) }}
-          </template>
-          <template v-if="column.key === 'bizType'">
-            {{ getAttachmentBizTypeText((record as Api.Attachment.AttachmentVO).bizType) }}
-          </template>
-          <template v-if="column.key === 'action'">
-            <ASpace>
-              <AButton
-                v-if="isImage(record as Api.Attachment.AttachmentVO)"
-                type="link"
-                size="small"
-                @click="handlePreview(record as Api.Attachment.AttachmentVO)"
-              >
-                预览
-              </AButton>
-              <AButton type="link" size="small" @click="handleDownload(record as Api.Attachment.AttachmentVO)">
-                下载
-              </AButton>
-              <AButton type="link" size="small" danger @click="handleDelete(record as Api.Attachment.AttachmentVO)">
-                删除
-              </AButton>
-            </ASpace>
-          </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </ACard>
 
     <FileUploadModal v-model:visible="uploadState.visible" @submitted="getData" />
@@ -348,4 +354,10 @@ onBeforeUnmount(revokePreviewUrl);
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.file-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

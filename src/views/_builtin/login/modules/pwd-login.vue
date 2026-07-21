@@ -18,8 +18,8 @@ interface FormModel {
 }
 
 const model: FormModel = reactive({
-  userName: 'admin',
-  password: 'Yx20011102!',
+  userName: '',
+  password: '',
   captchaCode: ''
 });
 
@@ -28,7 +28,7 @@ const rules = computed<Record<keyof FormModel, App.Global.FormRule[]>>(() => {
   const { formRules } = useFormRules();
 
   return {
-    userName: formRules.userName,
+    userName: [{ required: true, message: $t('form.userName.required') }],
     password: formRules.pwd,
     captchaCode: [{ required: true, message: $t('page.login.common.captchaPlaceholder') }]
   };

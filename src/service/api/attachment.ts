@@ -145,7 +145,7 @@ export async function fetchAttachmentBlob(
   id: number,
   action: 'preview' | 'download' = 'preview'
 ): Promise<AttachmentBlobResult> {
-  const url = `${getServiceBaseURL()}/attachment/${action}?id=${id}`;
+  const url = `${getServiceBaseURL()}/api/attachment/${action}?id=${id}`;
   const token = localStg.get('token');
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;

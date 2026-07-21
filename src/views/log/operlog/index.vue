@@ -4,6 +4,7 @@ import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchSysLogClean, fetchSysLogDelete, fetchSysLogEnums, fetchSysLogPage } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import OperlogDetailDrawer from './modules/detail-drawer.vue';
 
 defineOptions({
@@ -11,6 +12,9 @@ defineOptions({
 });
 
 const { hasAuth } = useAuth();
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 const searchParams = reactive<{ keyword: string; status: number | undefined }>({
   keyword: '',
@@ -224,63 +228,71 @@ onMounted(async () => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="operlog-card flex-1-hidden card-wrapper">
       <div class="mb-16px flex justify-between">
         <AButton v-if="hasAuth('log:operlog:clean')" danger @click="handleClean">清空日志</AButton>
         <AButton @click="getData">刷新</AButton>
       </div>
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1100 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'id'">
-            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+      <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1100, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'id'">
+              {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+            </template>
+            <template v-else-if="column.key === 'requestMethod'">
+              <ATag :color="methodColor((record as Api.SysLog.SysLogVO).requestMethod)">
+                {{ (record as Api.SysLog.SysLogVO).requestMethod }}
+              </ATag>
+            </template>
+            <template v-else-if="column.key === 'statusText'">
+              <ATag :color="(record as Api.SysLog.SysLogVO).status === 1 ? 'success' : 'error'">
+                {{ (record as Api.SysLog.SysLogVO).statusText }}
+              </ATag>
+            </template>
+            <template v-else-if="column.key === 'costTime'">{{ (record as Api.SysLog.SysLogVO).costTime }} ms</template>
+            <template v-else-if="column.key === 'action'">
+              <ASpace>
+                <AButton
+                  v-if="hasAuth('log:operlog:list')"
+                  type="link"
+                  size="small"
+                  @click="openDetail(record as Api.SysLog.SysLogVO)"
+                >
+                  详情
+                </AButton>
+                <AButton
+                  v-if="hasAuth('log:operlog:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.SysLog.SysLogVO)"
+                >
+                  删除
+                </AButton>
+              </ASpace>
+            </template>
           </template>
-          <template v-else-if="column.key === 'requestMethod'">
-            <ATag :color="methodColor((record as Api.SysLog.SysLogVO).requestMethod)">
-              {{ (record as Api.SysLog.SysLogVO).requestMethod }}
-            </ATag>
-          </template>
-          <template v-else-if="column.key === 'statusText'">
-            <ATag :color="(record as Api.SysLog.SysLogVO).status === 1 ? 'success' : 'error'">
-              {{ (record as Api.SysLog.SysLogVO).statusText }}
-            </ATag>
-          </template>
-          <template v-else-if="column.key === 'costTime'">{{ (record as Api.SysLog.SysLogVO).costTime }} ms</template>
-          <template v-else-if="column.key === 'action'">
-            <ASpace>
-              <AButton
-                v-if="hasAuth('log:operlog:list')"
-                type="link"
-                size="small"
-                @click="openDetail(record as Api.SysLog.SysLogVO)"
-              >
-                详情
-              </AButton>
-              <AButton
-                v-if="hasAuth('log:operlog:delete')"
-                type="link"
-                size="small"
-                danger
-                @click="handleDelete(record as Api.SysLog.SysLogVO)"
-              >
-                删除
-              </AButton>
-            </ASpace>
-          </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </ACard>
 
     <OperlogDetailDrawer v-model:visible="detailState.visible" :row="detailState.row" />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.operlog-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

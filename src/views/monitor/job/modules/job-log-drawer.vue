@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue';
 import type { TablePaginationConfig } from 'ant-design-vue';
 import { Modal } from 'ant-design-vue';
 import { fetchJobLogClean, fetchJobLogDelete, fetchJobLogPage } from '@/service/api';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 
 interface Props {
   visible: boolean;
@@ -11,6 +12,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 const emit = defineEmits<{
   (e: 'update:visible', val: boolean): void;
@@ -145,8 +149,8 @@ const columns = [
 </script>
 
 <template>
-  <ADrawer :open="visible" title="任务执行日志" :width="1500" @close="handleClose">
-    <div class="flex-col gap-16px">
+  <ADrawer :open="visible" title="任务执行日志" :width="1500" class="job-log-drawer" @close="handleClose">
+    <div class="flex-col flex-1 gap-16px overflow-hidden">
       <AForm layout="inline">
         <AFormItem label="执行状态">
           <ASelect v-model:value="status" placeholder="请选择状态" allow-clear class="w-140px">
@@ -164,34 +168,42 @@ const columns = [
         </AFormItem>
       </AForm>
 
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1140 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'index'">
-            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+      <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1140, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'index'">
+              {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+            </template>
+            <template v-else-if="column.key === 'status'">
+              <ATag :color="(record as Api.JobLog.SysJobLogVO).status === 1 ? 'success' : 'error'">
+                {{ (record as Api.JobLog.SysJobLogVO).statusText }}
+              </ATag>
+            </template>
+            <template v-else-if="column.key === 'action'">
+              <AButton type="link" size="small" danger @click="handleDelete(record as Api.JobLog.SysJobLogVO)">
+                删除
+              </AButton>
+            </template>
           </template>
-          <template v-else-if="column.key === 'status'">
-            <ATag :color="(record as Api.JobLog.SysJobLogVO).status === 1 ? 'success' : 'error'">
-              {{ (record as Api.JobLog.SysJobLogVO).statusText }}
-            </ATag>
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <AButton type="link" size="small" danger @click="handleDelete(record as Api.JobLog.SysJobLogVO)">
-              删除
-            </AButton>
-          </template>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </div>
   </ADrawer>
 </template>
 
-<style scoped></style>
+<style scoped>
+.job-log-drawer :deep(.ant-drawer-body) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+</style>

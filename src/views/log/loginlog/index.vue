@@ -9,6 +9,7 @@ import {
   fetchSysLoginLogPage
 } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { useTableScrollY } from '@/hooks/common/use-table-scroll-y';
 import LoginlogDetailDrawer from './modules/detail-drawer.vue';
 
 defineOptions({
@@ -16,6 +17,9 @@ defineOptions({
 });
 
 const { hasAuth } = useAuth();
+
+const tableScrollRef = ref<HTMLElement | null>(null);
+const { tableScrollY } = useTableScrollY(tableScrollRef);
 
 const searchParams = reactive<{ keyword: string; loginType: number | undefined; status: number | undefined }>({
   keyword: '',
@@ -256,65 +260,73 @@ onMounted(async () => {
       </AForm>
     </ACard>
 
-    <ACard :bordered="false" class="flex-1-hidden card-wrapper">
+    <ACard :bordered="false" class="loginlog-card flex-1-hidden card-wrapper">
       <div class="mb-16px flex justify-between">
         <AButton v-if="hasAuth('log:loginlog:clean')" danger @click="handleClean">清空日志</AButton>
         <AButton @click="getData">刷新</AButton>
       </div>
-      <ATable
-        :columns="columns"
-        :data-source="tableData"
-        :loading="loading"
-        :pagination="pagination"
-        row-key="id"
-        size="small"
-        :scroll="{ x: 1270 }"
-        @change="handleTableChange"
-      >
-        <template #bodyCell="{ column, record, index }">
-          <template v-if="column.key === 'id'">
-            {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+      <div ref="tableScrollRef" class="flex-1 overflow-hidden">
+        <ATable
+          :columns="columns"
+          :data-source="tableData"
+          :loading="loading"
+          :pagination="pagination"
+          row-key="id"
+          size="small"
+          :scroll="{ x: 1270, y: tableScrollY }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, record, index }">
+            <template v-if="column.key === 'id'">
+              {{ ((pagination.current ?? 1) - 1) * (pagination.pageSize ?? 10) + index + 1 }}
+            </template>
+            <template v-else-if="column.key === 'loginTypeText'">
+              <ATag :color="loginTypeColor((record as Api.SysLoginLog.SysLoginLogVO).loginType)">
+                {{ (record as Api.SysLoginLog.SysLoginLogVO).loginTypeText }}
+              </ATag>
+            </template>
+            <template v-else-if="column.key === 'statusText'">
+              <ATag :color="(record as Api.SysLoginLog.SysLoginLogVO).status === 1 ? 'success' : 'error'">
+                {{ (record as Api.SysLoginLog.SysLoginLogVO).statusText }}
+              </ATag>
+            </template>
+            <template v-else-if="column.key === 'action'">
+              <ASpace>
+                <AButton
+                  v-if="hasAuth('log:loginlog:list')"
+                  type="link"
+                  size="small"
+                  @click="openDetail(record as Api.SysLoginLog.SysLoginLogVO)"
+                >
+                  详情
+                </AButton>
+                <AButton
+                  v-if="hasAuth('log:loginlog:delete')"
+                  type="link"
+                  size="small"
+                  danger
+                  @click="handleDelete(record as Api.SysLoginLog.SysLoginLogVO)"
+                >
+                  删除
+                </AButton>
+              </ASpace>
+            </template>
           </template>
-          <template v-else-if="column.key === 'loginTypeText'">
-            <ATag :color="loginTypeColor((record as Api.SysLoginLog.SysLoginLogVO).loginType)">
-              {{ (record as Api.SysLoginLog.SysLoginLogVO).loginTypeText }}
-            </ATag>
+          <template #emptyText>
+            <div></div>
           </template>
-          <template v-else-if="column.key === 'statusText'">
-            <ATag :color="(record as Api.SysLoginLog.SysLoginLogVO).status === 1 ? 'success' : 'error'">
-              {{ (record as Api.SysLoginLog.SysLoginLogVO).statusText }}
-            </ATag>
-          </template>
-          <template v-else-if="column.key === 'action'">
-            <ASpace>
-              <AButton
-                v-if="hasAuth('log:loginlog:list')"
-                type="link"
-                size="small"
-                @click="openDetail(record as Api.SysLoginLog.SysLoginLogVO)"
-              >
-                详情
-              </AButton>
-              <AButton
-                v-if="hasAuth('log:loginlog:delete')"
-                type="link"
-                size="small"
-                danger
-                @click="handleDelete(record as Api.SysLoginLog.SysLoginLogVO)"
-              >
-                删除
-              </AButton>
-            </ASpace>
-          </template>
-        </template>
-        <template #emptyText>
-          <div></div>
-        </template>
-      </ATable>
+        </ATable>
+      </div>
     </ACard>
 
     <LoginlogDetailDrawer v-model:visible="detailState.visible" :row="detailState.row" />
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.loginlog-card :deep(.ant-card-body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>
