@@ -20,6 +20,12 @@ function isSecondFactorCode(code: string): boolean {
   return codes.includes(code);
 }
 
+/** 判断后端业务码是否属于「需要强制修改密码」（可识别状态，非错误，交由首页弹窗引导改密） */
+function isForceChangePwdCode(code: string): boolean {
+  const codes = import.meta.env.VITE_SERVICE_FORCE_CHANGE_PWD_CODES?.split(',').filter(Boolean) || [];
+  return codes.includes(code);
+}
+
 /** 读取 env 中以逗号分隔的权限码列表（避免在每个分支里重复写 `?.split || []`，降低 onBackendFail 复杂度） */
 function getCodeList(key: keyof ImportMetaEnv): string[] {
   const raw = import.meta.env[key];
@@ -117,6 +123,14 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
       // second-factor (password) verification. Treat it as a recognizable state (NOT an error): return the
       // response so the caller can branch on `response.data.code`, and skip logout / error toast.
       if (isSecondFactorCode(responseCode)) {
+        return response;
+      }
+
+      // when the backend response code is in `forceChangePwdCodes`, it means the current user must change
+      // password (new user / password expired). Treat it as a recognizable state (NOT an error): return the
+      // response so the caller (auth store) can branch on `response.data.code` and show a forced change-password
+      // modal on the home page. Skip logout / error toast / reset.
+      if (isForceChangePwdCode(responseCode)) {
         return response;
       }
 

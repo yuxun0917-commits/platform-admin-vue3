@@ -52,6 +52,15 @@ interface ImportMetaEnv {
    */
   readonly VITE_SERVICE_SECOND_FACTOR_CODES: string;
   /**
+   * force change password codes of backend service
+   *
+   * when the code is received, the frontend shows a forced change-password modal on the home page
+   * (instead of logging out or showing an error)
+   *
+   * use "," to separate multiple codes
+   */
+  readonly VITE_SERVICE_FORCE_CHANGE_PWD_CODES: string;
+  /**
    * modal logout codes of backend service
    *
    * when the code is received, the user will be logged out by displaying a modal

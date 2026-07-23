@@ -5,6 +5,7 @@ import type { WatermarkProps } from 'ant-design-vue';
 import { useAppStore } from './store/modules/app';
 import { useThemeStore } from './store/modules/theme';
 import { antdLocales } from './locales/antd';
+import ForceChangePwdModal from './views/_builtin/force-change-pwd-modal.vue';
 
 defineOptions({
   name: 'App'
@@ -41,8 +42,10 @@ const watermarkProps = computed(() => {
       <AWatermark
         v-if="themeStore.watermark.visible"
         v-bind="watermarkProps"
-        class="pointer-events-none absolute-lt! size-full"
+        class="pointer-events-none size-full absolute-lt!"
       />
+      <!-- 强制改密弹窗：登录后 /user/info 返回 20006 时在首页弹出，不允许关闭 -->
+      <ForceChangePwdModal />
     </AppProvider>
   </ConfigProvider>
 </template>

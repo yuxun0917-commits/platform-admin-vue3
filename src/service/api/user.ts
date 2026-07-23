@@ -63,6 +63,15 @@ export function fetchUserChangePassword(data: Api.User.UserPasswordVO) {
   });
 }
 
+/** POST /user/reset-pwd - 自主修改密码（强制改密自救，免权限、免二次认证，用户ID取自登录态） */
+export function fetchUserResetPwd(data: Api.User.UserPasswordVO) {
+  return request<null>({
+    url: '/user/reset-pwd',
+    method: 'post',
+    data
+  });
+}
+
 /** GET /user/enums - 用户相关枚举列表 */
 export function fetchUserEnums() {
   return request<Api.User.EnumOption[]>({

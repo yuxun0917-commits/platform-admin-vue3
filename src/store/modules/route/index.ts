@@ -203,7 +203,14 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   function initBackendMenu() {
     const menusData = authStore.userInfo.menus;
 
-    if (!menusData || menusData.length === 0) return;
+    if (!menusData || menusData.length === 0) {
+      // 强制改密期间 /user/info 返回 20006，后端未下发菜单；若保持 initStaticAuthRoute 留下的
+      // 静态路由菜单，会把 coming-soon（页面建设中）等占位菜单暴露到侧边栏，所以只保留仪表盘。
+      if (authStore.needChangePassword) {
+        menus.value = [buildDashboardMenu()];
+      }
+      return;
+    }
 
     // Sort by displayOrder (recursively) so the sidebar follows the backend-defined order,
     // mirroring how static/dynamic routes are sorted by meta.order.
